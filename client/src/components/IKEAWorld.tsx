@@ -5,6 +5,18 @@ import { useState } from 'react';
 import { getChunkData, getSectionDisplay, CHUNK_SIZE, RENDER_DISTANCE, CEILING_HEIGHT, FurnitureItem, Settlement } from '../utils/worldGen';
 import { useGameStore } from '../store/gameStore';
 
+const FLOOR_COLORS: Record<string, string> = {
+  bathroom: '#b8ccd9',
+  kitchen: '#d9ccb8',
+  living: '#c4d4c4',
+  bedroom: '#d4c4d4',
+  lighting: '#d9d4b8',
+  gardening: '#b8d9b8',
+  furniture: '#d4c8b8',
+  workspace: '#c4c4d9',
+  productivity: '#b8d4d4'
+};
+
 const COLORS: Record<string, string> = {
   sofa: '#4a6fa5', coffee_table: '#c49a6c', bed: '#d4a574', bookshelf: '#d4a574',
   wardrobe: '#f0e6d2', nightstand: '#d4a574', dresser: '#e8dcc8', floor_lamp: '#444444',
@@ -97,7 +109,7 @@ function InstancedChunk({ items }: { items: FurnitureItem[] }) {
   if (items.length === 0) return null;
 
   return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, items.length]} frustumCulled={true}>
+    <instancedMesh ref={meshRef} args={[undefined, undefined, items.length]} frustumCulled={false}>
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial vertexColors={false} />
       <instancedBufferAttribute attach="instanceColor" args={[colorArray, 3]} />
@@ -166,12 +178,13 @@ function Chunk({ chunkX, chunkZ }: { chunkX: number; chunkZ: number }) {
   const baseX = chunkX * CHUNK_SIZE;
   const baseZ = chunkZ * CHUNK_SIZE;
   const sectionName = getSectionDisplay(chunkData.section);
+  const floorColor = FLOOR_COLORS[chunkData.section] || '#c8c0b0';
 
   return (
     <group>
       <mesh position={[baseX, 0, baseZ]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[CHUNK_SIZE, CHUNK_SIZE]} />
-        <meshStandardMaterial color="#c8c0b0" />
+        <meshStandardMaterial color={floorColor} />
       </mesh>
       <mesh position={[baseX, CEILING_HEIGHT, baseZ]} rotation={[Math.PI / 2, 0, 0]}>
         <planeGeometry args={[CHUNK_SIZE, CHUNK_SIZE]} />

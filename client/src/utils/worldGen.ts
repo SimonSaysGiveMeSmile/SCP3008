@@ -84,11 +84,15 @@ function makeCollider(x: number, z: number, w: number, d: number, rot: number): 
 function generateSectionItems(rng: SeededRNG, section: string, baseX: number, baseZ: number): FurnitureItem[] {
   const items: FurnitureItem[] = [];
   const density = 60;
+  const isSpawnChunk = baseX === 0 && baseZ === 0;
 
   for (let i = 0; i < density; i++) {
     const x = baseX + rng.range(-CHUNK_SIZE / 2 + 2, CHUNK_SIZE / 2 - 2);
     const z = baseZ + rng.range(-CHUNK_SIZE / 2 + 2, CHUNK_SIZE / 2 - 2);
     const rot = rng.int(0, 4) * (Math.PI / 2);
+
+    // Keep spawn area clear
+    if (isSpawnChunk && x * x + z * z < 16) continue;
 
     switch (section) {
       case 'bathroom':
@@ -161,6 +165,7 @@ function generateSectionItems(rng: SeededRNG, section: string, baseX: number, ba
   for (let i = 0; i < 4; i++) {
     const x = baseX + rng.range(-CHUNK_SIZE / 2 + 4, CHUNK_SIZE / 2 - 4);
     const z = baseZ + rng.range(-CHUNK_SIZE / 2 + 4, CHUNK_SIZE / 2 - 4);
+    if (isSpawnChunk && x * x + z * z < 25) continue;
     const rot = rng.int(0, 2) * Math.PI;
     items.push({
       type: 'warehouse_shelf',
@@ -172,6 +177,7 @@ function generateSectionItems(rng: SeededRNG, section: string, baseX: number, ba
   }
 
   // Maze walls — create corridor-like structure
+  if (!isSpawnChunk) {
   const wallCount = 3 + rng.int(0, 3);
   for (let i = 0; i < wallCount; i++) {
     const horizontal = rng.next() > 0.5;
@@ -247,6 +253,7 @@ function generateSectionItems(rng: SeededRNG, section: string, baseX: number, ba
       }
     }
   }
+  } // end if (!isSpawnChunk)
 
   return items;
 }
@@ -292,7 +299,9 @@ export function getSectionDisplay(section: string): string {
 
 export function getColliders(chunkX: number, chunkZ: number): AABB[] {
   const data = getChunkData(chunkX, chunkZ);
-  return data.items.map(item => item.collider);
+  return data.items
+    .map(item => item.collider)
+    .filter(c => c.maxX - c.minX > 0.01 && c.maxZ - c.minZ > 0.01);
 }
 
 export function checkCollision(px: number, pz: number, radius: number, chunks: Array<{x: number; z: number}>): boolean {
