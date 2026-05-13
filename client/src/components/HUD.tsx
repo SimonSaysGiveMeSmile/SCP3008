@@ -1,0 +1,150 @@
+import { useState, useRef, useEffect } from 'react';
+import { useGameStore } from '../store/gameStore';
+import { sendChat } from '../utils/network';
+
+export default function HUD() {
+  const health = useGameStore(s => s.health);
+  const gameState = useGameStore(s => s.gameState);
+  const messages = useGameStore(s => s.messages);
+  const [chatInput, setChatInput] = useState('');
+  const [chatOpen, setChatOpen] = useState(false);
+  const chatRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !chatOpen) {
+        e.preventDefault();
+        setChatOpen(true);
+      } else if (e.key === 'Escape' && chatOpen) {
+        setChatOpen(false);
+        setChatInput('');
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [chatOpen]);
+
+  useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const handleSend = () => {
+    if (chatInput.trim()) {
+      sendChat(chatInput.trim());
+      setChatInput('');
+      setChatOpen(false);
+    }
+  };
+
+  const timePercent = Math.round(gameState.timeOfDay * 100);
+  const timeDisplay = `${Math.floor(gameState.timeOfDay * 24).toString().padStart(2, '0')}:${Math.floor((gameState.timeOfDay * 24 % 1) * 60).toString().padStart(2, '0')}`;
+
+  return (
+    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+      {/* Crosshair */}
+      <div style={{
+        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+        width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center'
+      }}>
+        <div style={{ position: 'absolute', width: '2px', height: '12px', background: 'rgba(255,255,255,0.7)' }} />
+        <div style={{ position: 'absolute', width: '12px', height: '2px', background: 'rgba(255,255,255,0.7)' }} />
+      </div>
+
+      {/* Health bar */}
+      <div style={{
+        position: 'absolute', bottom: '30px', left: '50%', transform: 'translateX(-50%)',
+        width: '300px', padding: '4px', background: 'rgba(0,0,0,0.6)', borderRadius: '4px'
+      }}>
+        <div style={{
+          height: '20px', borderRadius: '2px', transition: 'width 0.3s',
+          width: `${health}%`,
+          background: health > 60 ? '#44cc44' : health > 30 ? '#cccc44' : '#cc4444'
+        }} />
+        <div style={{
+          position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+          color: '#fff', fontSize: '12px', fontFamily: 'Courier New'
+        }}>
+          {Math.round(health)} HP
+        </div>
+      </div>
+
+      {/* Day/Night indicator */}
+      <div style={{
+        position: 'absolute', top: '20px', right: '20px',
+        background: 'rgba(0,0,0,0.6)', padding: '10px 15px', borderRadius: '4px',
+        color: '#fff', fontFamily: 'Courier New', fontSize: '14px'
+      }}>
+        <div style={{ color: gameState.isNight ? '#ff4444' : '#ffcc00' }}>
+          {gameState.isNight ? '[ NIGHT ]' : '[ DAY ]'}
+        </div>
+        <div style={{ fontSize: '12px', color: '#aaa', marginTop: '4px' }}>
+          {timeDisplay} | Day {gameState.dayCount}
+        </div>
+      </div>
+
+      {/* Night warning */}
+      {gameState.isNight && (
+        <div style={{
+          position: 'absolute', top: '80px', left: '50%', transform: 'translateX(-50%)',
+          color: '#ff3333', fontFamily: 'Courier New', fontSize: '16px',
+          textAlign: 'center', animation: 'pulse 1s infinite',
+          textShadow: '0 0 10px #ff0000'
+        }}>
+          "The store is now closed. Please exit the building."
+        </div>
+      )}
+
+      {/* Chat */}
+      <div style={{
+        position: 'absolute', bottom: '70px', left: '20px', width: '350px',
+        pointerEvents: chatOpen ? 'auto' : 'none'
+      }}>
+        <div ref={chatRef} style={{
+          maxHeight: '150px', overflowY: 'auto', marginBottom: '5px',
+          padding: '5px', background: 'rgba(0,0,0,0.4)', borderRadius: '4px'
+        }}>
+          {messages.map(msg => (
+            <div key={msg.id} style={{
+              color: '#ddd', fontSize: '12px', fontFamily: 'Courier New',
+              marginBottom: '2px'
+            }}>
+              <span style={{ color: '#88ccff' }}>{msg.sender}:</span> {msg.text}
+            </div>
+          ))}
+        </div>
+        {chatOpen && (
+          <input
+            autoFocus
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            placeholder="Type a message..."
+            style={{
+              width: '100%', padding: '8px', fontSize: '12px',
+              background: 'rgba(0,0,0,0.7)', border: '1px solid #444',
+              color: '#fff', fontFamily: 'Courier New', borderRadius: '4px',
+              pointerEvents: 'auto'
+            }}
+          />
+        )}
+      </div>
+
+      {/* Controls hint */}
+      <div style={{
+        position: 'absolute', bottom: '20px', left: '20px',
+        color: '#666', fontSize: '11px', fontFamily: 'Courier New'
+      }}>
+        WASD: Move | Shift: Sprint | Enter: Chat | Click: Lock cursor
+      </div>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+      `}</style>
+    </div>
+  );
+}
