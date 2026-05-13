@@ -1,8 +1,29 @@
 import { create } from 'zustand';
 import { PlayerState, NPCState, GameState, ChatMessage } from '../../../shared/types';
 
+export interface GameSettings {
+  renderDistance: number;
+  mouseSensitivity: number;
+  fov: number;
+  showFps: boolean;
+}
+
+export interface Weapon {
+  name: string;
+  damage: number;
+  range: number;
+  cooldown: number;
+  icon: string;
+}
+
+export const WEAPONS: Weapon[] = [
+  { name: 'Fists', damage: 5, range: 1.5, cooldown: 500, icon: 'fist' },
+  { name: 'Chair Leg', damage: 12, range: 2.0, cooldown: 600, icon: 'club' },
+  { name: 'Shelf Plank', damage: 18, range: 2.5, cooldown: 800, icon: 'plank' },
+  { name: 'Table Leg', damage: 25, range: 2.2, cooldown: 700, icon: 'bat' },
+];
+
 interface GameStore {
-  // Connection
   connected: boolean;
   playerName: string;
   joined: boolean;
@@ -10,11 +31,9 @@ interface GameStore {
   setPlayerName: (name: string) => void;
   setJoined: (v: boolean) => void;
 
-  // Game state
   gameState: GameState;
   setGameState: (state: GameState) => void;
 
-  // Players
   localPlayer: PlayerState | null;
   remotePlayers: Map<string, PlayerState>;
   setLocalPlayer: (p: PlayerState) => void;
@@ -22,17 +41,31 @@ interface GameStore {
   removeRemotePlayer: (id: string) => void;
   setRemotePlayers: (players: PlayerState[]) => void;
 
-  // NPCs
   npcs: NPCState[];
   setNPCs: (npcs: NPCState[]) => void;
 
-  // Chat
   messages: ChatMessage[];
   addMessage: (msg: ChatMessage) => void;
 
-  // Player health
+  // Survival stats
   health: number;
+  hunger: number;
+  thirst: number;
   setHealth: (h: number) => void;
+  setHunger: (h: number) => void;
+  setThirst: (t: number) => void;
+
+  // Weapon
+  currentWeapon: number;
+  lastAttackTime: number;
+  setCurrentWeapon: (i: number) => void;
+  setLastAttackTime: (t: number) => void;
+
+  // Settings
+  settings: GameSettings;
+  setSettings: (s: Partial<GameSettings>) => void;
+  settingsOpen: boolean;
+  setSettingsOpen: (v: boolean) => void;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -78,5 +111,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
   })),
 
   health: 100,
+  hunger: 100,
+  thirst: 100,
   setHealth: (h) => set({ health: h }),
+  setHunger: (h) => set({ hunger: h }),
+  setThirst: (t) => set({ thirst: t }),
+
+  currentWeapon: 0,
+  lastAttackTime: 0,
+  setCurrentWeapon: (i) => set({ currentWeapon: i }),
+  setLastAttackTime: (t) => set({ lastAttackTime: t }),
+
+  settings: {
+    renderDistance: 3,
+    mouseSensitivity: 1.0,
+    fov: 75,
+    showFps: false,
+  },
+  setSettings: (s) => set((state) => ({ settings: { ...state.settings, ...s } })),
+  settingsOpen: false,
+  setSettingsOpen: (v) => set({ settingsOpen: v }),
 }));

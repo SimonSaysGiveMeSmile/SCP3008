@@ -1,113 +1,107 @@
-import { useMemo } from 'react';
+import { useMemo, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { useThree, useFrame } from '@react-three/fiber';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
+import { getChunkData, getSectionDisplay, CHUNK_SIZE, RENDER_DISTANCE, CEILING_HEIGHT, FurnitureItem, Settlement } from '../utils/worldGen';
+import { useGameStore } from '../store/gameStore';
 
-const CHUNK_SIZE = 40;
-const RENDER_DISTANCE = 3;
-const CEILING_HEIGHT = 9;
+const COLORS: Record<string, string> = {
+  sofa: '#4a6fa5', coffee_table: '#c49a6c', bed: '#d4a574', bookshelf: '#d4a574',
+  wardrobe: '#f0e6d2', nightstand: '#d4a574', dresser: '#e8dcc8', floor_lamp: '#444444',
+  desk: '#f5e6d3', office_chair: '#333333', bathtub: '#ffffff', sink: '#ffffff',
+  mirror_cabinet: '#aaccee', towel_rack: '#cccccc', toilet: '#ffffff',
+  kitchen_counter: '#f0e6d2', kitchen_table: '#f5e6d3', kitchen_chair: '#d4a574',
+  cabinet_tall: '#f0e6d2', kitchen_island: '#e8dcc8', plant_pot: '#228833',
+  garden_shelf: '#8b6914', outdoor_table: '#888888', outdoor_chair: '#888888',
+  planter_box: '#8b6914', shelf: '#d4a574', warehouse_shelf: '#555555',
+  tv_stand: '#333333', armchair: '#8b4513', lamp_display: '#e8e0d4',
+  chandelier_display: '#ccaa44', standing_desk: '#f5e6d3', whiteboard: '#ffffff',
+  filing_cabinet: '#666666', storage_box: '#336699', desk_lamp: '#444444',
+  display_table: '#e8dcc8', wall: '#d9d0c4', wall_top: '#c8bfb3'
+};
 
-function seededRandom(seed: number) {
-  const x = Math.sin(seed * 127.1 + seed * 311.7) * 43758.5453;
-  return x - Math.floor(x);
+function getItemDimensions(item: FurnitureItem): [number, number, number] {
+  if (item.scale) return item.scale;
+  switch (item.type) {
+    case 'sofa': return [2.2, 0.7, 0.9];
+    case 'coffee_table': return [1.2, 0.45, 0.6];
+    case 'bed': return [2.0, 0.6, 1.6];
+    case 'bookshelf': return [1.2, 2.2, 0.4];
+    case 'wardrobe': return [1.5, 2.0, 0.6];
+    case 'nightstand': return [0.5, 0.6, 0.4];
+    case 'dresser': return [1.2, 1.0, 0.5];
+    case 'floor_lamp': return [0.3, 1.8, 0.3];
+    case 'desk': return [1.6, 0.78, 0.8];
+    case 'office_chair': return [0.5, 1.0, 0.5];
+    case 'bathtub': return [1.8, 0.55, 0.8];
+    case 'sink': return [0.6, 0.9, 0.5];
+    case 'mirror_cabinet': return [0.8, 0.7, 0.15];
+    case 'towel_rack': return [0.8, 0.4, 0.1];
+    case 'toilet': return [0.5, 0.5, 0.7];
+    case 'kitchen_counter': return [2.0, 0.93, 0.6];
+    case 'kitchen_table': return [1.4, 0.78, 0.9];
+    case 'kitchen_chair': return [0.45, 0.9, 0.45];
+    case 'cabinet_tall': return [0.6, 2.0, 0.4];
+    case 'kitchen_island': return [1.8, 0.93, 0.9];
+    case 'plant_pot': return [0.4, 0.7, 0.4];
+    case 'garden_shelf': return [1.5, 1.6, 0.5];
+    case 'outdoor_table': return [1.2, 0.72, 1.2];
+    case 'outdoor_chair': return [0.5, 0.8, 0.5];
+    case 'planter_box': return [1.0, 0.55, 0.4];
+    case 'shelf': return [2, 1.8, 0.5];
+    case 'warehouse_shelf': return [5, 4, 0.8];
+    case 'tv_stand': return [1.6, 1.0, 0.4];
+    case 'armchair': return [0.8, 0.8, 0.8];
+    case 'lamp_display': return [1.0, 1.5, 0.6];
+    case 'chandelier_display': return [0.8, 2.0, 0.8];
+    case 'standing_desk': return [1.4, 1.05, 0.7];
+    case 'whiteboard': return [1.5, 1.1, 0.08];
+    case 'filing_cabinet': return [0.5, 1.2, 0.6];
+    case 'storage_box': return [0.5, 0.42, 0.4];
+    case 'desk_lamp': return [0.2, 0.3, 0.2];
+    case 'display_table': return [1.8, 0.44, 0.9];
+    case 'wall': return [8, 3.5, 0.2];
+    case 'wall_top': return [8, 0.3, 0.25];
+    default: return [1, 1, 1];
+  }
 }
 
-function Shelf({ position, rotation, scale }: {
-  position: [number, number, number];
-  rotation?: number;
-  scale?: [number, number, number];
-}) {
-  return (
-    <group position={position} rotation={[0, rotation || 0, 0]}>
-      {/* Shelf frame */}
-      <mesh position={[0, scale ? scale[1] / 2 : 1, 0]}>
-        <boxGeometry args={scale || [2, 2, 0.5]} />
-        <meshStandardMaterial color="#d4a574" />
-      </mesh>
-      {/* Shelf boards */}
-      {[0.5, 1, 1.5].map((y, i) => (
-        <mesh key={i} position={[0, y, 0]}>
-          <boxGeometry args={[(scale?.[0] || 2) - 0.1, 0.05, (scale?.[2] || 0.5)]} />
-          <meshStandardMaterial color="#c49a6c" />
-        </mesh>
-      ))}
-    </group>
-  );
-}
+function InstancedChunk({ items }: { items: FurnitureItem[] }) {
+  const meshRef = useRef<THREE.InstancedMesh>(null);
+  const dummy = useMemo(() => new THREE.Object3D(), []);
 
-function Table({ position }: { position: [number, number, number] }) {
-  return (
-    <group position={position}>
-      <mesh position={[0, 0.75, 0]}>
-        <boxGeometry args={[1.5, 0.05, 0.9]} />
-        <meshStandardMaterial color="#f5e6d3" />
-      </mesh>
-      {[[-0.6, -0.35], [0.6, -0.35], [-0.6, 0.35], [0.6, 0.35]].map(([x, z], i) => (
-        <mesh key={i} position={[x, 0.375, z]}>
-          <boxGeometry args={[0.05, 0.75, 0.05]} />
-          <meshStandardMaterial color="#d4a574" />
-        </mesh>
-      ))}
-    </group>
-  );
-}
+  const colorArray = useMemo(() => {
+    const arr = new Float32Array(items.length * 3);
+    items.forEach((item, i) => {
+      const color = new THREE.Color(COLORS[item.type] || '#888888');
+      arr[i * 3] = color.r;
+      arr[i * 3 + 1] = color.g;
+      arr[i * 3 + 2] = color.b;
+    });
+    return arr;
+  }, [items]);
 
-function Sofa({ position, rotation }: { position: [number, number, number]; rotation: number }) {
-  return (
-    <group position={position} rotation={[0, rotation, 0]}>
-      <mesh position={[0, 0.3, 0]}>
-        <boxGeometry args={[2, 0.4, 0.9]} />
-        <meshStandardMaterial color="#4a6fa5" />
-      </mesh>
-      <mesh position={[0, 0.6, -0.35]}>
-        <boxGeometry args={[2, 0.5, 0.2]} />
-        <meshStandardMaterial color="#3d5d8a" />
-      </mesh>
-      {[[-0.9, 0.5, 0], [0.9, 0.5, 0]].map(([x, y, z], i) => (
-        <mesh key={i} position={[x, y, z]}>
-          <boxGeometry args={[0.2, 0.4, 0.9]} />
-          <meshStandardMaterial color="#3d5d8a" />
-        </mesh>
-      ))}
-    </group>
-  );
-}
+  useEffect(() => {
+    if (!meshRef.current) return;
+    items.forEach((item, i) => {
+      const dims = getItemDimensions(item);
+      dummy.position.set(item.position[0], dims[1] / 2, item.position[2]);
+      dummy.rotation.set(0, item.rotation, 0);
+      dummy.scale.set(dims[0], dims[1], dims[2]);
+      dummy.updateMatrix();
+      meshRef.current!.setMatrixAt(i, dummy.matrix);
+    });
+    meshRef.current.instanceMatrix.needsUpdate = true;
+  }, [items, dummy]);
 
-function Bed({ position, rotation }: { position: [number, number, number]; rotation: number }) {
-  return (
-    <group position={position} rotation={[0, rotation, 0]}>
-      <mesh position={[0, 0.3, 0]}>
-        <boxGeometry args={[2, 0.3, 1.5]} />
-        <meshStandardMaterial color="#e8e0d4" />
-      </mesh>
-      <mesh position={[0, 0.5, 0]}>
-        <boxGeometry args={[1.8, 0.15, 1.3]} />
-        <meshStandardMaterial color="#ffffff" />
-      </mesh>
-      <mesh position={[0, 0.5, -0.55]}>
-        <boxGeometry args={[1.6, 0.1, 0.2]} />
-        <meshStandardMaterial color="#cccccc" />
-      </mesh>
-      <mesh position={[0, 0.7, -0.7]}>
-        <boxGeometry args={[2, 0.8, 0.1]} />
-        <meshStandardMaterial color="#d4a574" />
-      </mesh>
-    </group>
-  );
-}
+  if (items.length === 0) return null;
 
-function Lamp({ position }: { position: [number, number, number] }) {
   return (
-    <group position={position}>
-      <mesh position={[0, 0.75, 0]}>
-        <cylinderGeometry args={[0.02, 0.02, 1.5, 8]} />
-        <meshStandardMaterial color="#333333" />
-      </mesh>
-      <mesh position={[0, 1.5, 0]}>
-        <coneGeometry args={[0.3, 0.4, 8]} />
-        <meshStandardMaterial color="#ffee88" emissive="#ffcc00" emissiveIntensity={0.3} />
-      </mesh>
-    </group>
+    <instancedMesh ref={meshRef} args={[undefined, undefined, items.length]} frustumCulled={true}>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial vertexColors={false} />
+      <instancedBufferAttribute attach="instanceColor" args={[colorArray, 3]} />
+    </instancedMesh>
   );
 }
 
@@ -115,127 +109,85 @@ function SectionSign({ position, text }: { position: [number, number, number]; t
   return (
     <group position={position}>
       <mesh>
-        <boxGeometry args={[3, 0.8, 0.05]} />
+        <boxGeometry args={[3.5, 0.9, 0.06]} />
         <meshStandardMaterial color="#003399" />
       </mesh>
-      <mesh position={[0, 0, 0.03]}>
-        <boxGeometry args={[2.8, 0.6, 0.01]} />
-        <meshStandardMaterial color="#ffcc00" />
+      <mesh position={[0, 0, 0.035]}>
+        <boxGeometry args={[3.2, 0.7, 0.01]} />
+        <meshStandardMaterial color="#ffcc00" emissive="#ffcc00" emissiveIntensity={0.05} />
       </mesh>
     </group>
   );
 }
 
-// PLACEHOLDER_CHUNK_CONTENT
-
-function generateChunkContent(chunkX: number, chunkZ: number) {
-  const items: Array<{ type: string; position: [number, number, number]; rotation: number }> = [];
-  const seed = chunkX * 73856093 + chunkZ * 19349663;
-
-  const sections = ['living', 'bedroom', 'kitchen', 'office', 'bathroom'];
-  const sectionType = sections[Math.abs(seed) % sections.length];
-
-  const baseX = chunkX * CHUNK_SIZE;
-  const baseZ = chunkZ * CHUNK_SIZE;
-
-  for (let i = 0; i < 25; i++) {
-    const r = seededRandom(seed + i * 7);
-    const r2 = seededRandom(seed + i * 13);
-    const r3 = seededRandom(seed + i * 31);
-    const x = baseX + (r - 0.5) * (CHUNK_SIZE - 4);
-    const z = baseZ + (r2 - 0.5) * (CHUNK_SIZE - 4);
-    const rot = Math.floor(r3 * 4) * (Math.PI / 2);
-
-    if (sectionType === 'living') {
-      if (i < 8) items.push({ type: 'sofa', position: [x, 0, z], rotation: rot });
-      else if (i < 14) items.push({ type: 'table', position: [x, 0, z], rotation: rot });
-      else if (i < 18) items.push({ type: 'shelf', position: [x, 0, z], rotation: rot });
-      else items.push({ type: 'lamp', position: [x, 0, z], rotation: 0 });
-    } else if (sectionType === 'bedroom') {
-      if (i < 8) items.push({ type: 'bed', position: [x, 0, z], rotation: rot });
-      else if (i < 14) items.push({ type: 'shelf', position: [x, 0, z], rotation: rot });
-      else items.push({ type: 'lamp', position: [x, 0, z], rotation: 0 });
-    } else {
-      if (i < 10) items.push({ type: 'shelf', position: [x, 0, z], rotation: rot });
-      else if (i < 16) items.push({ type: 'table', position: [x, 0, z], rotation: rot });
-      else items.push({ type: 'lamp', position: [x, 0, z], rotation: 0 });
-    }
-  }
-
-  // Add aisle shelving walls
-  for (let i = 0; i < 4; i++) {
-    const r = seededRandom(seed + 100 + i);
-    const r2 = seededRandom(seed + 200 + i);
-    const x = baseX + (r - 0.5) * CHUNK_SIZE * 0.8;
-    const z = baseZ + (r2 - 0.5) * CHUNK_SIZE * 0.8;
-    items.push({ type: 'tallshelf', position: [x, 0, z], rotation: Math.floor(r * 2) * Math.PI });
-  }
-
-  return { items, sectionType };
+function SettlementArea({ settlement }: { settlement: Settlement }) {
+  const wallHeight = 2.5;
+  const r = settlement.radius;
+  return (
+    <group position={settlement.position}>
+      {Array.from({ length: 12 }, (_, i) => {
+        const angle = (i / 12) * Math.PI * 2;
+        const x = Math.cos(angle) * r;
+        const z = Math.sin(angle) * r;
+        return (
+          <mesh key={i} position={[x, wallHeight / 2, z]} rotation={[0, angle + Math.PI / 2, 0]}>
+            <boxGeometry args={[r * 0.55, wallHeight, 0.4]} />
+            <meshStandardMaterial color="#8b6914" />
+          </mesh>
+        );
+      })}
+      <mesh position={[0, 0.1, 0]}>
+        <cylinderGeometry args={[0.4, 0.5, 0.2, 8]} />
+        <meshStandardMaterial color="#444444" />
+      </mesh>
+      <pointLight position={[0, 0.5, 0]} intensity={0.4} distance={6} color="#ff6600" />
+      {Array.from({ length: Math.min(settlement.population, 5) }, (_, i) => {
+        const angle = (i / 5) * Math.PI * 2;
+        const dist = r * 0.4;
+        return (
+          <group key={i} position={[Math.cos(angle) * dist, 0, Math.sin(angle) * dist]}>
+            <mesh position={[0, 0.5, 0]}>
+              <boxGeometry args={[0.35, 0.6, 0.2]} />
+              <meshStandardMaterial color={['#556b2f', '#8b4513', '#4a4a4a', '#2f4f4f', '#663399'][i % 5]} />
+            </mesh>
+            <mesh position={[0, 0.95, 0]}>
+              <sphereGeometry args={[0.15, 8, 8]} />
+              <meshStandardMaterial color="#e8c9a0" />
+            </mesh>
+          </group>
+        );
+      })}
+    </group>
+  );
 }
 
 function Chunk({ chunkX, chunkZ }: { chunkX: number; chunkZ: number }) {
-  const { items, sectionType } = useMemo(
-    () => generateChunkContent(chunkX, chunkZ),
-    [chunkX, chunkZ]
-  );
-
+  const chunkData = useMemo(() => getChunkData(chunkX, chunkZ), [chunkX, chunkZ]);
   const baseX = chunkX * CHUNK_SIZE;
   const baseZ = chunkZ * CHUNK_SIZE;
-
-  const sections = ['VARDAGSRUM', 'SOVRUM', 'KÖK', 'KONTOR', 'BADRUM'];
-  const sectionNames: Record<string, string> = {
-    living: 'VARDAGSRUM', bedroom: 'SOVRUM', kitchen: 'KÖK',
-    office: 'KONTOR', bathroom: 'BADRUM'
-  };
+  const sectionName = getSectionDisplay(chunkData.section);
 
   return (
     <group>
-      {/* Floor */}
       <mesh position={[baseX, 0, baseZ]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[CHUNK_SIZE, CHUNK_SIZE]} />
         <meshStandardMaterial color="#c8c0b0" />
       </mesh>
-
-      {/* Ceiling */}
       <mesh position={[baseX, CEILING_HEIGHT, baseZ]} rotation={[Math.PI / 2, 0, 0]}>
         <planeGeometry args={[CHUNK_SIZE, CHUNK_SIZE]} />
         <meshStandardMaterial color="#f0ece4" />
       </mesh>
-
-      {/* Section sign */}
-      <SectionSign
-        position={[baseX, 7, baseZ - CHUNK_SIZE / 2 + 2]}
-        text={sectionNames[sectionType] || 'IKEA'}
-      />
-
-      {/* Ceiling lights */}
-      {[[-8, 8], [8, 8], [-8, -8], [8, -8]].map(([ox, oz], i) => (
-        <mesh key={`light-${i}`} position={[baseX + ox, CEILING_HEIGHT - 0.1, baseZ + oz]}>
-          <boxGeometry args={[2, 0.1, 0.3]} />
-          <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.5} />
+      <SectionSign position={[baseX, 7.5, baseZ - CHUNK_SIZE / 2 + 1]} text={sectionName} />
+      {[[-10, -10], [10, -10], [-10, 10], [10, 10], [0, 0]].map(([ox, oz], i) => (
+        <mesh key={`fl-${i}`} position={[baseX + ox, CEILING_HEIGHT - 0.05, baseZ + oz]}>
+          <boxGeometry args={[2.4, 0.08, 0.15]} />
+          <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.4} />
         </mesh>
       ))}
-
-      {/* Furniture items */}
-      {items.map((item, i) => {
-        switch (item.type) {
-          case 'shelf':
-            return <Shelf key={i} position={item.position} rotation={item.rotation} />;
-          case 'tallshelf':
-            return <Shelf key={i} position={item.position} rotation={item.rotation} scale={[4, 3.5, 0.6]} />;
-          case 'table':
-            return <Table key={i} position={item.position} />;
-          case 'sofa':
-            return <Sofa key={i} position={item.position} rotation={item.rotation} />;
-          case 'bed':
-            return <Bed key={i} position={item.position} rotation={item.rotation} />;
-          case 'lamp':
-            return <Lamp key={i} position={item.position} />;
-          default:
-            return null;
-        }
-      })}
+      <InstancedChunk items={chunkData.items} />
+      {chunkData.settlements.map((s, i) => (
+        <SettlementArea key={`s-${i}`} settlement={s} />
+      ))}
     </group>
   );
 }
@@ -243,14 +195,16 @@ function Chunk({ chunkX, chunkZ }: { chunkX: number; chunkZ: number }) {
 export default function IKEAWorld() {
   const { camera } = useThree();
   const [chunks, setChunks] = useState<Array<{ x: number; z: number }>>([]);
+  const settings = useGameStore(s => s.settings);
+  const renderDist = settings?.renderDistance ?? RENDER_DISTANCE;
 
   useFrame(() => {
     const cx = Math.floor(camera.position.x / CHUNK_SIZE);
     const cz = Math.floor(camera.position.z / CHUNK_SIZE);
 
     const newChunks: Array<{ x: number; z: number }> = [];
-    for (let x = cx - RENDER_DISTANCE; x <= cx + RENDER_DISTANCE; x++) {
-      for (let z = cz - RENDER_DISTANCE; z <= cz + RENDER_DISTANCE; z++) {
+    for (let x = cx - renderDist; x <= cx + renderDist; x++) {
+      for (let z = cz - renderDist; z <= cz + renderDist; z++) {
         newChunks.push({ x, z });
       }
     }

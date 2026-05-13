@@ -1,14 +1,59 @@
 import { useState, useRef, useEffect } from 'react';
-import { useGameStore } from '../store/gameStore';
+import { useGameStore, WEAPONS } from '../store/gameStore';
 import { sendChat } from '../utils/network';
+
+function StatBar({ value, max, color, label }: { value: number; max: number; color: string; label: string }) {
+  const pct = Math.max(0, Math.min(100, (value / max) * 100));
+  return (
+    <div style={{ marginBottom: '4px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#aaa', marginBottom: '2px' }}>
+        <span>{label}</span>
+        <span>{Math.round(value)}/{max}</span>
+      </div>
+      <div style={{ width: '100%', height: '14px', background: 'rgba(0,0,0,0.5)', borderRadius: '2px', overflow: 'hidden' }}>
+        <div style={{
+          width: `${pct}%`, height: '100%', borderRadius: '2px',
+          background: color, transition: 'width 0.3s'
+        }} />
+      </div>
+    </div>
+  );
+}
 
 export default function HUD() {
   const health = useGameStore(s => s.health);
+  const hunger = useGameStore(s => s.hunger);
+  const thirst = useGameStore(s => s.thirst);
   const gameState = useGameStore(s => s.gameState);
   const messages = useGameStore(s => s.messages);
+  const currentWeapon = useGameStore(s => s.currentWeapon);
+  const settings = useGameStore(s => s.settings);
   const [chatInput, setChatInput] = useState('');
   const [chatOpen, setChatOpen] = useState(false);
+  const [fps, setFps] = useState(0);
   const chatRef = useRef<HTMLDivElement>(null);
+  const frameCount = useRef(0);
+  const lastFpsTime = useRef(Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const elapsed = now - lastFpsTime.current;
+      if (elapsed > 0) {
+        setFps(Math.round((frameCount.current / elapsed) * 1000));
+        frameCount.current = 0;
+        lastFpsTime.current = now;
+      }
+    }, 1000);
+
+    const countFrame = () => {
+      frameCount.current++;
+      requestAnimationFrame(countFrame);
+    };
+    const id = requestAnimationFrame(countFrame);
+
+    return () => { clearInterval(interval); cancelAnimationFrame(id); };
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -25,9 +70,7 @@ export default function HUD() {
   }, [chatOpen]);
 
   useEffect(() => {
-    if (chatRef.current) {
-      chatRef.current.scrollTop = chatRef.current.scrollHeight;
-    }
+    if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
   }, [messages]);
 
   const handleSend = () => {
@@ -38,8 +81,8 @@ export default function HUD() {
     }
   };
 
-  const timePercent = Math.round(gameState.timeOfDay * 100);
   const timeDisplay = `${Math.floor(gameState.timeOfDay * 24).toString().padStart(2, '0')}:${Math.floor((gameState.timeOfDay * 24 % 1) * 60).toString().padStart(2, '0')}`;
+  const weapon = WEAPONS[currentWeapon];
 
   return (
     <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
@@ -48,25 +91,40 @@ export default function HUD() {
         position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
         width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center'
       }}>
-        <div style={{ position: 'absolute', width: '2px', height: '12px', background: 'rgba(255,255,255,0.7)' }} />
-        <div style={{ position: 'absolute', width: '12px', height: '2px', background: 'rgba(255,255,255,0.7)' }} />
+        <div style={{ position: 'absolute', width: '2px', height: '14px', background: 'rgba(255,255,255,0.7)' }} />
+        <div style={{ position: 'absolute', width: '14px', height: '2px', background: 'rgba(255,255,255,0.7)' }} />
       </div>
 
-      {/* Health bar */}
+      {/* FPS counter */}
+      {settings.showFps && (
+        <div style={{ position: 'absolute', top: '10px', left: '10px', color: '#44ff44', fontSize: '12px', fontFamily: 'Courier New' }}>
+          {fps} FPS
+        </div>
+      )}
+
+      {/* Survival stats - bottom center */}
       <div style={{
-        position: 'absolute', bottom: '30px', left: '50%', transform: 'translateX(-50%)',
-        width: '300px', padding: '4px', background: 'rgba(0,0,0,0.6)', borderRadius: '4px'
+        position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)',
+        width: '280px', padding: '8px', background: 'rgba(0,0,0,0.6)', borderRadius: '4px',
+        fontFamily: 'Courier New'
       }}>
-        <div style={{
-          height: '20px', borderRadius: '2px', transition: 'width 0.3s',
-          width: `${health}%`,
-          background: health > 60 ? '#44cc44' : health > 30 ? '#cccc44' : '#cc4444'
-        }} />
-        <div style={{
-          position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-          color: '#fff', fontSize: '12px', fontFamily: 'Courier New'
-        }}>
-          {Math.round(health)} HP
+        <StatBar value={health} max={100} color={health > 60 ? '#44cc44' : health > 30 ? '#cccc44' : '#cc4444'} label="HP" />
+        <StatBar value={hunger} max={100} color={hunger > 50 ? '#cc8833' : '#cc4444'} label="HUNGER" />
+        <StatBar value={thirst} max={100} color={thirst > 50 ? '#3388cc' : '#cc4444'} label="THIRST" />
+      </div>
+
+      {/* Weapon display - bottom left */}
+      <div style={{
+        position: 'absolute', bottom: '20px', left: '20px',
+        background: 'rgba(0,0,0,0.6)', padding: '8px 12px', borderRadius: '4px',
+        fontFamily: 'Courier New', color: '#e0e0e0', fontSize: '12px'
+      }}>
+        <div style={{ color: '#ffcc00', marginBottom: '2px' }}>{weapon.name}</div>
+        <div style={{ color: '#888', fontSize: '10px' }}>
+          DMG: {weapon.damage} | RNG: {weapon.range.toFixed(1)}m
+        </div>
+        <div style={{ color: '#555', fontSize: '9px', marginTop: '4px' }}>
+          [1-4] Switch | LMB Attack
         </div>
       </div>
 
@@ -88,9 +146,9 @@ export default function HUD() {
       {gameState.isNight && (
         <div style={{
           position: 'absolute', top: '80px', left: '50%', transform: 'translateX(-50%)',
-          color: '#ff3333', fontFamily: 'Courier New', fontSize: '16px',
-          textAlign: 'center', animation: 'pulse 1s infinite',
-          textShadow: '0 0 10px #ff0000'
+          color: '#ff3333', fontFamily: 'Courier New', fontSize: '14px',
+          textAlign: 'center', textShadow: '0 0 10px #ff0000',
+          animation: 'pulse 1.5s infinite'
         }}>
           "The store is now closed. Please exit the building."
         </div>
@@ -98,18 +156,15 @@ export default function HUD() {
 
       {/* Chat */}
       <div style={{
-        position: 'absolute', bottom: '70px', left: '20px', width: '350px',
+        position: 'absolute', top: '60px', left: '20px', width: '320px',
         pointerEvents: chatOpen ? 'auto' : 'none'
       }}>
         <div ref={chatRef} style={{
-          maxHeight: '150px', overflowY: 'auto', marginBottom: '5px',
-          padding: '5px', background: 'rgba(0,0,0,0.4)', borderRadius: '4px'
+          maxHeight: '120px', overflowY: 'auto', marginBottom: '5px',
+          padding: '5px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px'
         }}>
           {messages.map(msg => (
-            <div key={msg.id} style={{
-              color: '#ddd', fontSize: '12px', fontFamily: 'Courier New',
-              marginBottom: '2px'
-            }}>
+            <div key={msg.id} style={{ color: '#ddd', fontSize: '11px', fontFamily: 'Courier New', marginBottom: '2px' }}>
               <span style={{ color: '#88ccff' }}>{msg.sender}:</span> {msg.text}
             </div>
           ))}
@@ -122,7 +177,7 @@ export default function HUD() {
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Type a message..."
             style={{
-              width: '100%', padding: '8px', fontSize: '12px',
+              width: '100%', padding: '6px', fontSize: '11px',
               background: 'rgba(0,0,0,0.7)', border: '1px solid #444',
               color: '#fff', fontFamily: 'Courier New', borderRadius: '4px',
               pointerEvents: 'auto'
@@ -133,16 +188,16 @@ export default function HUD() {
 
       {/* Controls hint */}
       <div style={{
-        position: 'absolute', bottom: '20px', left: '20px',
-        color: '#666', fontSize: '11px', fontFamily: 'Courier New'
+        position: 'absolute', top: '20px', left: '20px',
+        color: '#555', fontSize: '10px', fontFamily: 'Courier New'
       }}>
-        WASD: Move | Shift: Sprint | Enter: Chat | Click: Lock cursor
+        WASD Move | Shift Sprint | Tab Settings | Enter Chat | 1-4 Weapons | LMB Attack
       </div>
 
       <style>{`
         @keyframes pulse {
           0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
+          50% { opacity: 0.4; }
         }
       `}</style>
     </div>

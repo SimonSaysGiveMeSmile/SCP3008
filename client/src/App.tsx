@@ -1,13 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useGameStore } from './store/gameStore';
 import { connectToServer, joinGame } from './utils/network';
 import GameScene from './components/GameScene';
 import HUD from './components/HUD';
+import Minimap from './components/Minimap';
+import SettingsMenu from './components/SettingsMenu';
 import LoginScreen from './components/LoginScreen';
 
 export default function App() {
   const joined = useGameStore(s => s.joined);
   const health = useGameStore(s => s.health);
+  const settingsOpen = useGameStore(s => s.settingsOpen);
 
   useEffect(() => {
     connectToServer();
@@ -46,6 +49,8 @@ export default function App() {
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       <GameScene />
       <HUD />
+      <Minimap />
+      {settingsOpen && <SettingsMenu />}
     </div>
   );
 }

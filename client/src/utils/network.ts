@@ -9,7 +9,7 @@ export function connectToServer() {
 
   const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5002';
   socket = io(serverUrl);
-  const store = useGameStore.getState();
+  (window as any).__gameSocket = socket;
 
   socket.on('connect', () => {
     useGameStore.getState().setConnected(true);

@@ -1,98 +1,112 @@
-import { useRef } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGameStore } from '../store/gameStore';
-import { NPCState } from '../../../shared/types';
 
-function NPCEntity({ npc }: { npc: NPCState }) {
-  const groupRef = useRef<THREE.Group>(null);
-  const gameState = useGameStore(s => s.gameState);
-
-  const heightScale = npc.type === 'tall' ? 1.6 : npc.type === 'short' ? 0.6 : 1;
-  const bodyWidth = npc.type === 'tall' ? 0.35 : npc.type === 'short' ? 0.5 : 0.4;
-  const armLength = npc.type === 'tall' ? 1.2 : npc.type === 'short' ? 0.5 : 0.8;
-  const legLength = npc.type === 'tall' ? 1.4 : npc.type === 'short' ? 0.4 : 0.9;
-
-  const totalHeight = legLength + 0.8 * heightScale + 0.35 * heightScale;
-
-  useFrame(() => {
-    if (groupRef.current) {
-      groupRef.current.position.set(npc.position.x, 0, npc.position.z);
-      groupRef.current.rotation.y = npc.rotation;
-    }
-  });
-
-  const shirtColor = gameState.isNight ? '#cc9900' : '#ffcc00';
-  const pantsColor = gameState.isNight ? '#001166' : '#003399';
-  const skinColor = '#e8c9a0';
-  const headColor = npc.isAggressive ? '#d4a070' : skinColor;
-
-  return (
-    <group ref={groupRef}>
-      {/* Head - NO FACE, smooth featureless sphere */}
-      <mesh position={[0, legLength + 0.8 * heightScale + 0.25 * heightScale, 0]}>
-        <sphereGeometry args={[0.2 * heightScale, 16, 16]} />
-        <meshStandardMaterial
-          color={headColor}
-          roughness={0.8}
-          emissive={npc.isAggressive ? '#330000' : '#000000'}
-          emissiveIntensity={npc.isAggressive ? 0.3 : 0}
-        />
-      </mesh>
-
-      {/* Torso - Yellow IKEA shirt */}
-      <mesh position={[0, legLength + 0.4 * heightScale, 0]}>
-        <boxGeometry args={[bodyWidth, 0.8 * heightScale, 0.25]} />
-        <meshStandardMaterial
-          color={shirtColor}
-          emissive={npc.isAggressive ? '#ff3300' : '#000000'}
-          emissiveIntensity={npc.isAggressive ? 0.2 : 0}
-        />
-      </mesh>
-
-      {/* Legs - Blue IKEA pants */}
-      <mesh position={[-0.1, legLength / 2, 0]}>
-        <boxGeometry args={[0.12, legLength, 0.12]} />
-        <meshStandardMaterial color={pantsColor} />
-      </mesh>
-      <mesh position={[0.1, legLength / 2, 0]}>
-        <boxGeometry args={[0.12, legLength, 0.12]} />
-        <meshStandardMaterial color={pantsColor} />
-      </mesh>
-
-      {/* Arms */}
-      <mesh position={[-(bodyWidth / 2 + 0.06), legLength + 0.4 * heightScale, 0]}
-        rotation={[npc.isAggressive ? -0.5 : 0, 0, npc.isAggressive ? 0.3 : 0]}>
-        <boxGeometry args={[0.1, armLength, 0.1]} />
-        <meshStandardMaterial color={shirtColor} />
-      </mesh>
-      <mesh position={[(bodyWidth / 2 + 0.06), legLength + 0.4 * heightScale, 0]}
-        rotation={[npc.isAggressive ? -0.5 : 0, 0, npc.isAggressive ? -0.3 : 0]}>
-        <boxGeometry args={[0.1, armLength, 0.1]} />
-        <meshStandardMaterial color={shirtColor} />
-      </mesh>
-
-      {/* Hands */}
-      <mesh position={[-(bodyWidth / 2 + 0.06), legLength + 0.4 * heightScale - armLength / 2 - 0.05, 0]}>
-        <sphereGeometry args={[0.06, 8, 8]} />
-        <meshStandardMaterial color={skinColor} />
-      </mesh>
-      <mesh position={[(bodyWidth / 2 + 0.06), legLength + 0.4 * heightScale - armLength / 2 - 0.05, 0]}>
-        <sphereGeometry args={[0.06, 8, 8]} />
-        <meshStandardMaterial color={skinColor} />
-      </mesh>
-    </group>
-  );
-}
+const SHIRT_COLOR = new THREE.Color('#ffcc00');
+const SHIRT_NIGHT = new THREE.Color('#cc9900');
+const PANTS_COLOR = new THREE.Color('#003399');
+const PANTS_NIGHT = new THREE.Color('#001a66');
+const SKIN_COLOR = new THREE.Color('#d4a070');
 
 export default function NPCEntities() {
   const npcs = useGameStore(s => s.npcs);
+  const gameState = useGameStore(s => s.gameState);
+
+  const bodyRef = useRef<THREE.InstancedMesh>(null);
+  const headRef = useRef<THREE.InstancedMesh>(null);
+  const legsRef = useRef<THREE.InstancedMesh>(null);
+  const armsRef = useRef<THREE.InstancedMesh>(null);
+
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+
+  useFrame(() => {
+    if (!bodyRef.current || !headRef.current || !legsRef.current || !armsRef.current) return;
+    if (npcs.length === 0) return;
+
+    const isNight = gameState.isNight;
+    const shirtCol = isNight ? SHIRT_NIGHT : SHIRT_COLOR;
+    const pantsCol = isNight ? PANTS_NIGHT : PANTS_COLOR;
+
+    // Update body material color
+    (bodyRef.current.material as THREE.MeshStandardMaterial).color = shirtCol;
+    (bodyRef.current.material as THREE.MeshStandardMaterial).emissive = isNight ? new THREE.Color('#331100') : new THREE.Color('#000000');
+    (bodyRef.current.material as THREE.MeshStandardMaterial).emissiveIntensity = isNight ? 0.2 : 0;
+    (legsRef.current.material as THREE.MeshStandardMaterial).color = pantsCol;
+    (headRef.current.material as THREE.MeshStandardMaterial).color = SKIN_COLOR;
+    (headRef.current.material as THREE.MeshStandardMaterial).emissive = isNight ? new THREE.Color('#220000') : new THREE.Color('#000000');
+    (headRef.current.material as THREE.MeshStandardMaterial).emissiveIntensity = isNight ? 0.15 : 0;
+    (armsRef.current.material as THREE.MeshStandardMaterial).color = shirtCol;
+
+    for (let i = 0; i < npcs.length; i++) {
+      const npc = npcs[i];
+      const heightScale = npc.type === 'tall' ? 1.5 : npc.type === 'short' ? 0.65 : 1.0;
+      const bodyWidth = 0.4;
+      const legLen = 0.9 * heightScale;
+      const bodyH = 0.7 * heightScale;
+
+      // Body (torso)
+      dummy.position.set(npc.position.x, legLen + bodyH / 2, npc.position.z);
+      dummy.rotation.set(0, npc.rotation, 0);
+      dummy.scale.set(bodyWidth, bodyH, 0.22);
+      dummy.updateMatrix();
+      bodyRef.current.setMatrixAt(i, dummy.matrix);
+
+      // Head (featureless sphere rendered as scaled box for instancing)
+      dummy.position.set(npc.position.x, legLen + bodyH + 0.18 * heightScale, npc.position.z);
+      dummy.rotation.set(0, npc.rotation, 0);
+      const headSize = 0.22 * heightScale;
+      dummy.scale.set(headSize, headSize, headSize);
+      dummy.updateMatrix();
+      headRef.current.setMatrixAt(i, dummy.matrix);
+
+      // Legs (single combined block)
+      dummy.position.set(npc.position.x, legLen / 2, npc.position.z);
+      dummy.rotation.set(0, npc.rotation, 0);
+      dummy.scale.set(0.25, legLen, 0.15);
+      dummy.updateMatrix();
+      legsRef.current.setMatrixAt(i, dummy.matrix);
+
+      // Arms
+      const armY = legLen + bodyH * 0.5;
+      const armRaise = isNight ? -0.4 : 0;
+      dummy.position.set(
+        npc.position.x + Math.cos(npc.rotation) * (bodyWidth / 2 + 0.08),
+        armY,
+        npc.position.z - Math.sin(npc.rotation) * (bodyWidth / 2 + 0.08)
+      );
+      dummy.rotation.set(armRaise, npc.rotation, isNight ? 0.2 : 0);
+      dummy.scale.set(0.08, 0.6 * heightScale, 0.08);
+      dummy.updateMatrix();
+      armsRef.current.setMatrixAt(i, dummy.matrix);
+    }
+
+    bodyRef.current.instanceMatrix.needsUpdate = true;
+    headRef.current.instanceMatrix.needsUpdate = true;
+    legsRef.current.instanceMatrix.needsUpdate = true;
+    armsRef.current.instanceMatrix.needsUpdate = true;
+  });
+
+  const count = Math.max(npcs.length, 1);
 
   return (
     <group>
-      {npcs.map(npc => (
-        <NPCEntity key={npc.id} npc={npc} />
-      ))}
+      <instancedMesh ref={bodyRef} args={[undefined, undefined, count]} frustumCulled={false}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color={SHIRT_COLOR} />
+      </instancedMesh>
+      <instancedMesh ref={headRef} args={[undefined, undefined, count]} frustumCulled={false}>
+        <sphereGeometry args={[1, 10, 10]} />
+        <meshStandardMaterial color={SKIN_COLOR} roughness={0.9} />
+      </instancedMesh>
+      <instancedMesh ref={legsRef} args={[undefined, undefined, count]} frustumCulled={false}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color={PANTS_COLOR} />
+      </instancedMesh>
+      <instancedMesh ref={armsRef} args={[undefined, undefined, count]} frustumCulled={false}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color={SHIRT_COLOR} />
+      </instancedMesh>
     </group>
   );
 }

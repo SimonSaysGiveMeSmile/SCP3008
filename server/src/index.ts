@@ -158,6 +158,27 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('attack:npc', (data: { npcId: string; damage: number }) => {
+    const npc = npcs.find(n => n.id === data.npcId);
+    if (npc) {
+      // NPCs become aggressive when attacked
+      npc.isAggressive = true;
+    }
+  });
+
+  socket.on('attack:player', (data: { targetId: string; damage: number }) => {
+    const target = players.get(data.targetId);
+    if (target) {
+      const dmg = Math.min(data.damage, 30); // cap damage to prevent cheating
+      target.health = Math.max(0, target.health - dmg);
+      io.emit('player:damaged', {
+        id: data.targetId,
+        health: target.health,
+        attackerId: socket.id
+      });
+    }
+  });
+
   socket.on('disconnect', () => {
     players.delete(socket.id);
     io.emit('player:left', socket.id);
