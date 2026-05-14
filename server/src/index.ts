@@ -29,14 +29,27 @@ const MAP_SIZE = 200;
 const NPC_HEALTH = 150;
 
 function initNPCs() {
+  npcs.length = 0;
   for (let i = 0; i < NPC_COUNT; i++) {
+    let x: number, z: number;
+    let attempts = 0;
+    // Ensure NPCs spawn with minimum distance from each other
+    do {
+      x = (Math.random() - 0.5) * MAP_SIZE;
+      z = (Math.random() - 0.5) * MAP_SIZE;
+      attempts++;
+    } while (
+      attempts < 50 &&
+      npcs.some(n => {
+        const dx = n.position.x - x;
+        const dz = n.position.z - z;
+        return dx * dx + dz * dz < 25; // min 5m apart
+      })
+    );
+
     npcs.push({
       id: `npc-${i}`,
-      position: {
-        x: (Math.random() - 0.5) * MAP_SIZE,
-        y: 0,
-        z: (Math.random() - 0.5) * MAP_SIZE
-      },
+      position: { x, y: 0, z },
       rotation: Math.random() * Math.PI * 2,
       type: 'tall',
       isAggressive: false,
@@ -46,11 +59,17 @@ function initNPCs() {
 }
 
 function respawnNPC(npc: NPCState) {
-  npc.position = {
-    x: (Math.random() - 0.5) * MAP_SIZE,
-    y: 0,
-    z: (Math.random() - 0.5) * MAP_SIZE
-  };
+  let x: number, z: number;
+  let attempts = 0;
+  do {
+    x = (Math.random() - 0.5) * MAP_SIZE;
+    z = (Math.random() - 0.5) * MAP_SIZE;
+    attempts++;
+  } while (
+    attempts < 30 &&
+    npcs.some(n => n.id !== npc.id && Math.abs(n.position.x - x) < 5 && Math.abs(n.position.z - z) < 5)
+  );
+  npc.position = { x, y: 0, z };
   npc.rotation = Math.random() * Math.PI * 2;
   npc.health = NPC_HEALTH;
   npc.isAggressive = false;
