@@ -58,14 +58,14 @@ export default function Minimap() {
 
           const relX = (chunkWorldX - playerPos.x) * scale;
           const relZ = (chunkWorldZ - playerPos.z) * scale;
-          const [rx, rz] = rotatePoint(relX, relZ, -playerRot);
+          const [rx, rz] = rotatePoint(relX, relZ, playerRot);
           const screenX = center + rx;
           const screenZ = center + rz;
           const chunkScreenSize = CHUNK_SIZE * scale;
 
           ctx.save();
           ctx.translate(screenX, screenZ);
-          ctx.rotate(-playerRot);
+          ctx.rotate(playerRot);
           ctx.fillStyle = SECTION_COLORS[chunk.section] || '#333333';
           ctx.globalAlpha = 0.25;
           ctx.fillRect(-chunkScreenSize / 2, -chunkScreenSize / 2, chunkScreenSize, chunkScreenSize);
@@ -76,7 +76,7 @@ export default function Minimap() {
           for (const item of chunk.items) {
             const ix = (item.position[0] - playerPos.x) * scale;
             const iz = (item.position[2] - playerPos.z) * scale;
-            const [rix, riz] = rotatePoint(ix, iz, -playerRot);
+            const [rix, riz] = rotatePoint(ix, iz, playerRot);
             const sx = center + rix;
             const sz = center + riz;
             if (sx >= 0 && sx <= MINIMAP_SIZE && sz >= 0 && sz <= MINIMAP_SIZE) {
@@ -87,7 +87,7 @@ export default function Minimap() {
           for (const s of chunk.settlements) {
             const sx = (s.position[0] - playerPos.x) * scale;
             const sz = (s.position[2] - playerPos.z) * scale;
-            const [rsx, rsz] = rotatePoint(sx, sz, -playerRot);
+            const [rsx, rsz] = rotatePoint(sx, sz, playerRot);
             const scrX = center + rsx;
             const scrZ = center + rsz;
             if (scrX >= -20 && scrX <= MINIMAP_SIZE + 20 && scrZ >= -20 && scrZ <= MINIMAP_SIZE + 20) {
@@ -106,7 +106,7 @@ export default function Minimap() {
       for (const npc of currentNpcs) {
         const nx = (npc.position.x - playerPos.x) * scale;
         const nz = (npc.position.z - playerPos.z) * scale;
-        const [rnx, rnz] = rotatePoint(nx, nz, -playerRot);
+        const [rnx, rnz] = rotatePoint(nx, nz, playerRot);
         const sx = center + rnx;
         const sz = center + rnz;
         if (sx >= 0 && sx <= MINIMAP_SIZE && sz >= 0 && sz <= MINIMAP_SIZE) {
@@ -122,7 +122,7 @@ export default function Minimap() {
       for (const [, p] of players) {
         const px = (p.position.x - playerPos.x) * scale;
         const pz = (p.position.z - playerPos.z) * scale;
-        const [rpx, rpz] = rotatePoint(px, pz, -playerRot);
+        const [rpx, rpz] = rotatePoint(px, pz, playerRot);
         const sx = center + rpx;
         const sz = center + rpz;
         if (sx >= 0 && sx <= MINIMAP_SIZE && sz >= 0 && sz <= MINIMAP_SIZE) {
@@ -151,7 +151,7 @@ export default function Minimap() {
       ctx.fillStyle = '#ff4444';
       ctx.font = '9px Courier New';
       ctx.textAlign = 'center';
-      const [nxr, nzr] = rotatePoint(0, -1, -playerRot);
+      const [nxr, nzr] = rotatePoint(0, -1, playerRot);
       ctx.fillText('N', center + nxr * 82, center + nzr * 82 + 3);
 
       // Border
