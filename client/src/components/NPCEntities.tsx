@@ -67,10 +67,10 @@ export default function NPCEntities() {
 
     for (let i = 0; i < npcs.length; i++) {
       const npc = npcs[i];
-      const heightScale = npc.type === 'tall' ? 1.5 : npc.type === 'short' ? 0.65 : 1.0;
-      const bodyWidth = 0.4;
-      const legLen = 0.9 * heightScale;
-      const bodyH = 0.7 * heightScale;
+      const heightScale = npc.type === 'tall' ? 2.0 : npc.type === 'short' ? 0.65 : 1.0;
+      const bodyWidth = 0.35;
+      const legLen = 1.0 * heightScale;
+      const bodyH = 0.8 * heightScale;
 
       // Body (torso)
       dummy.position.set(npc.position.x, legLen + bodyH / 2, npc.position.z);

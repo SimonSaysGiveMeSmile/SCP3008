@@ -30,7 +30,6 @@ const NPC_HEALTH = 150;
 
 function initNPCs() {
   for (let i = 0; i < NPC_COUNT; i++) {
-    const types: Array<'tall' | 'short' | 'normal'> = ['tall', 'short', 'normal'];
     npcs.push({
       id: `npc-${i}`,
       position: {
@@ -39,7 +38,7 @@ function initNPCs() {
         z: (Math.random() - 0.5) * MAP_SIZE
       },
       rotation: Math.random() * Math.PI * 2,
-      type: types[Math.floor(Math.random() * types.length)],
+      type: 'tall',
       isAggressive: false,
       health: NPC_HEALTH
     });

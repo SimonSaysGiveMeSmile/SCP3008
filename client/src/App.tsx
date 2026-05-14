@@ -7,6 +7,7 @@ import HUD from './components/HUD';
 import Minimap from './components/Minimap';
 import SettingsMenu from './components/SettingsMenu';
 import LoginScreen from './components/LoginScreen';
+import DialogueSystem from './components/DialogueSystem';
 
 export default function App() {
   const joined = useGameStore(s => s.joined);
@@ -52,6 +53,7 @@ export default function App() {
       <GameScene />
       <HUD />
       <Minimap />
+      <DialogueSystem />
       {settingsOpen && <SettingsMenu />}
     </div>
   );
