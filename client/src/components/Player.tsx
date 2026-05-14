@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { sendMovement } from '../utils/network';
 import { checkCollision, checkMovableCollision, displaceItem, removeCollectible, getChunkData, CHUNK_SIZE } from '../utils/worldGen';
 import { useGameStore, WEAPONS } from '../store/gameStore';
-import { playFootstep, playAttackSwing, playFlashlightClick, playHit } from '../utils/audio';
+import { playFootstep, playAttackSwing, playFlashlightClick, playHit, playObjectPush, playObjectHit } from '../utils/audio';
 
 const SPEED = 5;
 const SPRINT_MULTIPLIER = 1.8;
@@ -136,6 +136,7 @@ export default function Player() {
         const parts = mov.itemKey.split(',');
         displaceItem(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2]), mov.pushX, mov.pushZ);
         blockedX = false;
+        playObjectPush();
       }
     }
     if (blockedZ) {
@@ -144,6 +145,7 @@ export default function Player() {
         const parts = mov.itemKey.split(',');
         displaceItem(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2]), mov.pushX, mov.pushZ);
         blockedZ = false;
+        playObjectPush();
       }
     }
 
@@ -173,11 +175,11 @@ export default function Player() {
     // Footstep audio
     const moving = direction.current.length() > 0 && ((!blockedX && !npcBlockX) || (!blockedZ && !npcBlockZ));
     if (moving) {
-      const stepInterval = sprint ? 250 : 400;
+      const stepInterval = sprint ? 220 : 380;
       const now2 = Date.now();
       if (now2 - lastFootstep.current > stepInterval) {
         lastFootstep.current = now2;
-        playFootstep();
+        playFootstep(sprint);
       }
     }
 
@@ -233,7 +235,8 @@ export default function Player() {
       lastSent.current = now;
       sendMovement(
         { x: camera.position.x, y: camera.position.y, z: camera.position.z },
-        camera.rotation.y
+        camera.rotation.y,
+        sprint
       );
     }
   });

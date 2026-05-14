@@ -77,9 +77,9 @@ export function joinGame(name: string) {
   }
 }
 
-export function sendMovement(position: Vec3, rotation: number) {
+export function sendMovement(position: Vec3, rotation: number, sprinting: boolean = false) {
   if (socket) {
-    socket.emit('player:move', { position, rotation });
+    socket.emit('player:move', { position, rotation, sprinting });
   }
 }
 

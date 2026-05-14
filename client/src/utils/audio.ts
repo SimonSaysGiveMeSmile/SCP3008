@@ -30,8 +30,36 @@ function playTone(frequency: number, duration: number, volume: number = 0.1) {
   osc.stop(audioCtx.currentTime + duration);
 }
 
-export function playFootstep() {
-  playTone(80 + Math.random() * 40, 0.08, 0.03);
+export function playFootstep(sprinting: boolean = false) {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const freq = sprinting ? 60 + Math.random() * 30 : 90 + Math.random() * 50;
+  const vol = sprinting ? 0.07 : 0.04;
+  const dur = sprinting ? 0.06 : 0.09;
+  playTone(freq, dur, vol);
+  // Add a subtle high-frequency click for shoe impact
+  playTone(800 + Math.random() * 400, 0.02, sprinting ? 0.03 : 0.015);
+}
+
+export function playObjectPush() {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  // Scraping/sliding sound
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sawtooth';
+  osc.frequency.value = 50 + Math.random() * 30;
+  gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.15);
+}
+
+export function playObjectHit() {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  // Thud when hitting a solid object
+  playTone(70 + Math.random() * 20, 0.12, 0.1);
+  playTone(140 + Math.random() * 40, 0.06, 0.05);
 }
 
 export function playAttackSwing() {

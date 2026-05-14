@@ -103,21 +103,53 @@ function updateNPCs() {
         }
       }
     } else {
-      // Daytime: active wandering with varied behavior
-      const behaviorRoll = Math.random();
-      if (behaviorRoll < 0.03) {
-        // Sudden direction change (like turning into an aisle)
-        npc.rotation += (Math.random() - 0.5) * Math.PI;
-      } else if (behaviorRoll < 0.15) {
-        // Pause (standing still, "stocking shelves")
-        moveX = 0;
-        moveZ = 0;
-      } else {
-        // Normal walking with slight drift
-        npc.rotation += (Math.random() - 0.5) * 0.15;
-        const speed = 0.035 + Math.random() * 0.015;
-        moveX = Math.sin(npc.rotation) * speed;
-        moveZ = Math.cos(npc.rotation) * speed;
+      // Daytime: active wandering with hearing detection
+      let heardPlayer = false;
+
+      // Hearing cone: detect sprinting/moving players within range
+      const HEAR_RANGE_SPRINT = 20;
+      const HEAR_RANGE_WALK = 8;
+      const HEAR_CONE = Math.PI * 0.75; // 135 degree cone forward
+
+      for (const player of players.values()) {
+        const dx = player.position.x - npc.position.x;
+        const dz = player.position.z - npc.position.z;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+        const isSprinting = (player as any).sprinting;
+        const hearRange = isSprinting ? HEAR_RANGE_SPRINT : HEAR_RANGE_WALK;
+
+        if (dist < hearRange && dist > 0) {
+          // Check if player is within hearing cone
+          const angleToPlayer = Math.atan2(dx, dz);
+          let angleDiff = angleToPlayer - npc.rotation;
+          while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+          while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+
+          if (Math.abs(angleDiff) < HEAR_CONE / 2 || dist < 5) {
+            // Heard the player — turn toward them and investigate
+            npc.rotation += angleDiff * 0.1;
+            const speed = 0.03;
+            moveX = Math.sin(npc.rotation) * speed;
+            moveZ = Math.cos(npc.rotation) * speed;
+            heardPlayer = true;
+            break;
+          }
+        }
+      }
+
+      if (!heardPlayer) {
+        const behaviorRoll = Math.random();
+        if (behaviorRoll < 0.03) {
+          npc.rotation += (Math.random() - 0.5) * Math.PI;
+        } else if (behaviorRoll < 0.15) {
+          moveX = 0;
+          moveZ = 0;
+        } else {
+          npc.rotation += (Math.random() - 0.5) * 0.15;
+          const speed = 0.035 + Math.random() * 0.015;
+          moveX = Math.sin(npc.rotation) * speed;
+          moveZ = Math.cos(npc.rotation) * speed;
+        }
       }
     }
 
@@ -200,11 +232,12 @@ io.on('connection', (socket) => {
     socket.broadcast.emit('player:joined', player);
   });
 
-  socket.on('player:move', (data: { position: Vec3; rotation: number }) => {
+  socket.on('player:move', (data: { position: Vec3; rotation: number; sprinting?: boolean }) => {
     const player = players.get(socket.id);
     if (player) {
       player.position = data.position;
       player.rotation = data.rotation;
+      (player as any).sprinting = data.sprinting || false;
       socket.broadcast.emit('player:moved', player);
     }
   });
