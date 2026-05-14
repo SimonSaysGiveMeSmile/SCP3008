@@ -2,6 +2,7 @@ import { useMemo, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { useThree, useFrame } from '@react-three/fiber';
 import { useState } from 'react';
+import { Text } from '@react-three/drei';
 import { getChunkData, getSectionDisplay, CHUNK_SIZE, RENDER_DISTANCE, CEILING_HEIGHT, FurnitureItem, Settlement } from '../utils/worldGen';
 import { useGameStore } from '../store/gameStore';
 
@@ -128,6 +129,58 @@ function SectionSign({ position, text }: { position: [number, number, number]; t
         <boxGeometry args={[3.2, 0.7, 0.01]} />
         <meshStandardMaterial color="#ffcc00" emissive="#ffcc00" emissiveIntensity={0.05} />
       </mesh>
+      <Text
+        position={[0, 0, 0.05]}
+        fontSize={0.35}
+        color="#003399"
+        anchorX="center"
+        anchorY="middle"
+        font={undefined}
+      >
+        {text}
+      </Text>
+    </group>
+  );
+}
+
+const ITEM_LABELS: Record<string, string> = {
+  sofa: 'KLIPPAN', coffee_table: 'LACK', bed: 'MALM', bookshelf: 'BILLY',
+  wardrobe: 'PAX', nightstand: 'HEMNES', dresser: 'KULLEN', desk: 'MICKE',
+  office_chair: 'MARKUS', kitchen_table: 'LISABO', kitchen_counter: 'KNOXHULT',
+  kitchen_island: 'VADHOLMA', bathtub: 'BETINGEN', sink: 'GODMORGON',
+  cabinet_tall: 'METOD', plant_pot: 'FEJKA', outdoor_table: 'NÄMMARÖ',
+  standing_desk: 'BEKANT', whiteboard: 'SVENSÅS', armchair: 'POÄNG',
+  tv_stand: 'BESTÅ', shelf: 'KALLAX', warehouse_shelf: 'IVAR',
+  filing_cabinet: 'ALEX', storage_box: 'SAMLA', garden_shelf: 'HYLLIS'
+};
+
+function PriceTag({ position, name, rotation }: { position: [number, number, number]; name: string; rotation: number }) {
+  return (
+    <group position={position} rotation={[0, rotation, 0]}>
+      <mesh position={[0, 0, 0]}>
+        <planeGeometry args={[0.4, 0.2]} />
+        <meshBasicMaterial color="#ffffff" />
+      </mesh>
+      <Text
+        position={[0, 0.02, 0.005]}
+        fontSize={0.08}
+        color="#000000"
+        anchorX="center"
+        anchorY="middle"
+        font={undefined}
+      >
+        {name}
+      </Text>
+      <Text
+        position={[0, -0.05, 0.005]}
+        fontSize={0.06}
+        color="#003399"
+        anchorX="center"
+        anchorY="middle"
+        font={undefined}
+      >
+        {`${Math.floor(Math.random() * 500 + 49)} kr`}
+      </Text>
     </group>
   );
 }
@@ -180,6 +233,22 @@ function Chunk({ chunkX, chunkZ }: { chunkX: number; chunkZ: number }) {
   const sectionName = getSectionDisplay(chunkData.section);
   const floorColor = FLOOR_COLORS[chunkData.section] || '#c8c0b0';
 
+  const priceTags = useMemo(() => {
+    const tags: Array<{ pos: [number, number, number]; name: string; rot: number }> = [];
+    for (let i = 0; i < chunkData.items.length; i += 7) {
+      const item = chunkData.items[i];
+      const label = ITEM_LABELS[item.type];
+      if (label && item.position[1] === 0) {
+        tags.push({
+          pos: [item.position[0], 1.2, item.position[2] + 0.3],
+          name: label,
+          rot: item.rotation
+        });
+      }
+    }
+    return tags;
+  }, [chunkData]);
+
   return (
     <group>
       <mesh position={[baseX, 0, baseZ]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -191,13 +260,17 @@ function Chunk({ chunkX, chunkZ }: { chunkX: number; chunkZ: number }) {
         <meshStandardMaterial color="#f0ece4" />
       </mesh>
       <SectionSign position={[baseX, 7.5, baseZ - CHUNK_SIZE / 2 + 1]} text={sectionName} />
-      {[[-10, -10], [10, -10], [-10, 10], [10, 10], [0, 0]].map(([ox, oz], i) => (
+      <SectionSign position={[baseX, 7.5, baseZ + CHUNK_SIZE / 2 - 1]} text={sectionName} />
+      {[[-10, -10], [10, -10], [-10, 10], [10, 10], [0, 0], [-5, 5], [5, -5]].map(([ox, oz], i) => (
         <mesh key={`fl-${i}`} position={[baseX + ox, CEILING_HEIGHT - 0.05, baseZ + oz]}>
           <boxGeometry args={[2.4, 0.08, 0.15]} />
           <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.4} />
         </mesh>
       ))}
       <InstancedChunk items={chunkData.items} />
+      {priceTags.map((tag, i) => (
+        <PriceTag key={`pt-${i}`} position={tag.pos} name={tag.name} rotation={tag.rot} />
+      ))}
       {chunkData.settlements.map((s, i) => (
         <SettlementArea key={`s-${i}`} settlement={s} />
       ))}

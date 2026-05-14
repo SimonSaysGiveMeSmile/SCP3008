@@ -83,7 +83,7 @@ function makeCollider(x: number, z: number, w: number, d: number, rot: number): 
 
 function generateSectionItems(rng: SeededRNG, section: string, baseX: number, baseZ: number): FurnitureItem[] {
   const items: FurnitureItem[] = [];
-  const density = 60;
+  const density = 90;
   const isSpawnChunk = baseX === 0 && baseZ === 0;
 
   for (let i = 0; i < density; i++) {
@@ -162,9 +162,9 @@ function generateSectionItems(rng: SeededRNG, section: string, baseX: number, ba
   }
 
   // Add aisle divider shelves (tall warehouse-style)
-  for (let i = 0; i < 4; i++) {
-    const x = baseX + rng.range(-CHUNK_SIZE / 2 + 4, CHUNK_SIZE / 2 - 4);
-    const z = baseZ + rng.range(-CHUNK_SIZE / 2 + 4, CHUNK_SIZE / 2 - 4);
+  for (let i = 0; i < 7; i++) {
+    const x = baseX + rng.range(-CHUNK_SIZE / 2 + 3, CHUNK_SIZE / 2 - 3);
+    const z = baseZ + rng.range(-CHUNK_SIZE / 2 + 3, CHUNK_SIZE / 2 - 3);
     if (isSpawnChunk && x * x + z * z < 25) continue;
     const rot = rng.int(0, 2) * Math.PI;
     items.push({
@@ -174,16 +174,27 @@ function generateSectionItems(rng: SeededRNG, section: string, baseX: number, ba
       scale: [5, 4, 0.8],
       collider: makeCollider(x, z, 5, 0.8, rot)
     });
+    // Items on top of shelves
+    for (let j = 0; j < 3; j++) {
+      const ox = rng.range(-1.5, 1.5);
+      items.push({
+        type: 'storage_box',
+        position: [x + ox, 4.2, z + rng.range(-0.2, 0.2)],
+        rotation: rng.range(0, Math.PI * 2),
+        scale: [0.5, 0.4, 0.4],
+        collider: { minX: 0, minZ: 0, maxX: 0, maxZ: 0 }
+      });
+    }
   }
 
-  // Maze walls — create corridor-like structure
+  // Maze walls — create narrow corridor-like structure
   if (!isSpawnChunk) {
-  const wallCount = 3 + rng.int(0, 3);
+  const wallCount = 5 + rng.int(0, 4);
   for (let i = 0; i < wallCount; i++) {
     const horizontal = rng.next() > 0.5;
-    const wallLen = rng.range(6, 14);
+    const wallLen = rng.range(8, 18);
     const gapPos = rng.range(0.2, 0.8);
-    const gapSize = rng.range(1.8, 3.0);
+    const gapSize = rng.range(1.2, 2.5);
 
     if (horizontal) {
       const z = baseZ + rng.range(-CHUNK_SIZE / 2 + 4, CHUNK_SIZE / 2 - 4);

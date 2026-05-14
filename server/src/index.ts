@@ -60,9 +60,13 @@ function getClosestPlayer(npcPos: Vec3): PlayerState | null {
 
 function updateNPCs() {
   const isNight = gameState.isNight;
+  const NPC_RADIUS = 0.3;
 
   for (const npc of npcs) {
     npc.isAggressive = isNight;
+
+    let moveX = 0;
+    let moveZ = 0;
 
     if (isNight) {
       const target = getClosestPlayer(npc.position);
@@ -72,11 +76,10 @@ function updateNPCs() {
         const dist = Math.sqrt(dx * dx + dz * dz);
         if (dist > 1.5) {
           const speed = 0.08;
-          npc.position.x += (dx / dist) * speed;
-          npc.position.z += (dz / dist) * speed;
+          moveX = (dx / dist) * speed;
+          moveZ = (dz / dist) * speed;
           npc.rotation = Math.atan2(dx, dz);
         } else {
-          // Attack player
           target.health = Math.max(0, target.health - 0.5);
           io.emit('player:damaged', {
             id: target.id,
@@ -86,15 +89,48 @@ function updateNPCs() {
         }
       }
     } else {
-      // Wander randomly during day
       npc.rotation += (Math.random() - 0.5) * 0.1;
-      npc.position.x += Math.sin(npc.rotation) * 0.02;
-      npc.position.z += Math.cos(npc.rotation) * 0.02;
-
-      // Keep within bounds
-      if (Math.abs(npc.position.x) > MAP_SIZE / 2) npc.position.x *= 0.99;
-      if (Math.abs(npc.position.z) > MAP_SIZE / 2) npc.position.z *= 0.99;
+      moveX = Math.sin(npc.rotation) * 0.02;
+      moveZ = Math.cos(npc.rotation) * 0.02;
     }
+
+    // NPC-NPC collision avoidance
+    const newX = npc.position.x + moveX;
+    const newZ = npc.position.z + moveZ;
+    let blocked = false;
+    for (const other of npcs) {
+      if (other.id === npc.id) continue;
+      const dx = newX - other.position.x;
+      const dz = newZ - other.position.z;
+      if (dx * dx + dz * dz < (NPC_RADIUS * 2) * (NPC_RADIUS * 2)) {
+        blocked = true;
+        break;
+      }
+    }
+
+    // NPC-Player collision
+    if (!blocked) {
+      for (const player of players.values()) {
+        const dx = newX - player.position.x;
+        const dz = newZ - player.position.z;
+        if (dx * dx + dz * dz < (NPC_RADIUS + 0.3) * (NPC_RADIUS + 0.3)) {
+          blocked = true;
+          break;
+        }
+      }
+    }
+
+    if (!blocked) {
+      npc.position.x = newX;
+      npc.position.z = newZ;
+    } else if (isNight) {
+      // Try to slide around obstacle
+      npc.rotation += (Math.random() - 0.5) * 0.5;
+    }
+
+    // Keep within bounds
+    if (Math.abs(npc.position.x) > MAP_SIZE / 2) npc.position.x *= 0.99;
+    if (Math.abs(npc.position.z) > MAP_SIZE / 2) npc.position.z *= 0.99;
   }
 }
 

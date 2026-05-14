@@ -112,13 +112,34 @@ export default function Player() {
     }
 
     const newX = camera.position.x + velocity.current.x;
-    if (!checkCollision(newX, camera.position.z, PLAYER_RADIUS, nearbyChunks)) {
-      camera.position.x = newX;
-    }
     const newZ = camera.position.z + velocity.current.z;
-    if (!checkCollision(camera.position.x, newZ, PLAYER_RADIUS, nearbyChunks)) {
-      camera.position.z = newZ;
+
+    // Check furniture collisions
+    const blockedX = checkCollision(newX, camera.position.z, PLAYER_RADIUS, nearbyChunks);
+    const blockedZ = checkCollision(camera.position.x, newZ, PLAYER_RADIUS, nearbyChunks);
+
+    // Check NPC collisions (treat NPCs as cylinders with radius 0.3)
+    const npcRadius = 0.3;
+    const npcs = store.npcs;
+    let npcBlockX = false;
+    let npcBlockZ = false;
+    for (let i = 0; i < npcs.length; i++) {
+      const npc = npcs[i];
+      const dxX = newX - npc.position.x;
+      const dzX = camera.position.z - npc.position.z;
+      if (dxX * dxX + dzX * dzX < (PLAYER_RADIUS + npcRadius) * (PLAYER_RADIUS + npcRadius)) {
+        npcBlockX = true;
+      }
+      const dxZ = camera.position.x - npc.position.x;
+      const dzZ = newZ - npc.position.z;
+      if (dxZ * dxZ + dzZ * dzZ < (PLAYER_RADIUS + npcRadius) * (PLAYER_RADIUS + npcRadius)) {
+        npcBlockZ = true;
+      }
+      if (npcBlockX && npcBlockZ) break;
     }
+
+    if (!blockedX && !npcBlockX) camera.position.x = newX;
+    if (!blockedZ && !npcBlockZ) camera.position.z = newZ;
 
     camera.position.y = 1.7;
 
