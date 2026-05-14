@@ -58,8 +58,12 @@ interface GameStore {
   // Weapon
   currentWeapon: number;
   lastAttackTime: number;
+  isAttacking: boolean;
+  unlockedWeapons: boolean[];
   setCurrentWeapon: (i: number) => void;
   setLastAttackTime: (t: number) => void;
+  setIsAttacking: (v: boolean) => void;
+  unlockWeapon: (i: number) => void;
 
   // Settings
   settings: GameSettings;
@@ -127,8 +131,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   currentWeapon: 0,
   lastAttackTime: 0,
-  setCurrentWeapon: (i) => set({ currentWeapon: i }),
+  isAttacking: false,
+  unlockedWeapons: [true, false, false, false],
+  setCurrentWeapon: (i) => set((state) => {
+    if (state.unlockedWeapons[i]) return { currentWeapon: i };
+    return {};
+  }),
   setLastAttackTime: (t) => set({ lastAttackTime: t }),
+  setIsAttacking: (v) => set({ isAttacking: v }),
+  unlockWeapon: (i) => set((state) => {
+    const arr = [...state.unlockedWeapons];
+    arr[i] = true;
+    return { unlockedWeapons: arr };
+  }),
 
   settings: {
     renderDistance: 3,

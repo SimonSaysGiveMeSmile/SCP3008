@@ -29,6 +29,8 @@ export default function HUD() {
   const currentWeapon = useGameStore(s => s.currentWeapon);
   const settings = useGameStore(s => s.settings);
   const flashlightOn = useGameStore(s => s.flashlightOn);
+  const isAttacking = useGameStore(s => s.isAttacking);
+  const unlockedWeapons = useGameStore(s => s.unlockedWeapons);
   const [chatInput, setChatInput] = useState('');
   const [chatOpen, setChatOpen] = useState(false);
   const [fps, setFps] = useState(0);
@@ -96,6 +98,17 @@ export default function HUD() {
         <div style={{ position: 'absolute', width: '14px', height: '2px', background: 'rgba(255,255,255,0.7)' }} />
       </div>
 
+      {/* Weapon swing visual */}
+      <div style={{
+        position: 'absolute', bottom: '120px', right: '80px',
+        transform: `rotate(${isAttacking ? '-45deg' : '0deg'}) translateY(${isAttacking ? '-20px' : '0px'})`,
+        transition: 'transform 0.1s ease-out',
+        fontSize: '48px', opacity: 0.9,
+        filter: isAttacking ? 'brightness(1.5)' : 'none'
+      }}>
+        {currentWeapon === 0 ? '✊' : currentWeapon === 1 ? '🪑' : currentWeapon === 2 ? '🪵' : '🏏'}
+      </div>
+
       {/* FPS counter */}
       {settings.showFps && (
         <div style={{ position: 'absolute', top: '10px', left: '10px', color: '#44ff44', fontSize: '12px', fontFamily: 'Courier New' }}>
@@ -123,6 +136,19 @@ export default function HUD() {
         <div style={{ color: '#ffcc00', marginBottom: '2px' }}>{weapon.name}</div>
         <div style={{ color: '#888', fontSize: '10px' }}>
           DMG: {weapon.damage} | RNG: {weapon.range.toFixed(1)}m
+        </div>
+        <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+          {WEAPONS.map((w, i) => (
+            <div key={i} style={{
+              width: '20px', height: '20px', borderRadius: '3px',
+              background: i === currentWeapon ? '#ffcc00' : unlockedWeapons[i] ? '#444' : '#222',
+              border: `1px solid ${i === currentWeapon ? '#ffcc00' : unlockedWeapons[i] ? '#666' : '#333'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '10px', color: unlockedWeapons[i] ? '#fff' : '#555'
+            }}>
+              {i + 1}
+            </div>
+          ))}
         </div>
         <div style={{ color: '#555', fontSize: '9px', marginTop: '4px' }}>
           [1-4] Switch | LMB Attack

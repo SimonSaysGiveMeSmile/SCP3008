@@ -28,11 +28,21 @@ export interface Restaurant {
   type: 'restaurant' | 'bistro' | 'food_court';
 }
 
+export interface Collectible {
+  id: string;
+  type: 'food' | 'water' | 'health' | 'weapon';
+  subtype: string;
+  position: [number, number, number];
+  value: number;
+  weaponIndex?: number;
+}
+
 export interface ChunkData {
   items: FurnitureItem[];
   section: string;
   settlements: Settlement[];
   restaurant: Restaurant | null;
+  collectibles: Collectible[];
 }
 
 export const CHUNK_SIZE = 40;
@@ -360,7 +370,29 @@ export function getChunkData(chunkX: number, chunkZ: number): ChunkData {
     items.push({ type: 'kitchen_counter', position: [rx + 5, 0, rz], rotation: Math.PI / 2, scale: [4, 1.1, 0.7], collider: makeCollider(rx + 5, rz, 0.7, 4, Math.PI / 2) });
   }
 
-  const data: ChunkData = { items, section, settlements, restaurant };
+  // Generate collectibles (food, water, health packs, weapons)
+  const collectibles: Collectible[] = [];
+  const collectibleCount = 3 + rng.int(0, 5);
+  const foodTypes = ['Meatballs', 'Cinnamon Bun', 'Hot Dog', 'Salmon', 'Veggie Wrap'];
+  const waterTypes = ['Water Bottle', 'Lingonberry Juice', 'Coffee', 'Soda'];
+  for (let i = 0; i < collectibleCount; i++) {
+    const cx2 = baseX + rng.range(-CHUNK_SIZE / 2 + 3, CHUNK_SIZE / 2 - 3);
+    const cz2 = baseZ + rng.range(-CHUNK_SIZE / 2 + 3, CHUNK_SIZE / 2 - 3);
+    const roll = rng.next();
+    if (roll < 0.35) {
+      collectibles.push({ id: `${chunkX},${chunkZ},c${i}`, type: 'food', subtype: rng.pick(foodTypes), position: [cx2, 0.5, cz2], value: rng.int(15, 35) });
+    } else if (roll < 0.65) {
+      collectibles.push({ id: `${chunkX},${chunkZ},c${i}`, type: 'water', subtype: rng.pick(waterTypes), position: [cx2, 0.5, cz2], value: rng.int(15, 35) });
+    } else if (roll < 0.85) {
+      collectibles.push({ id: `${chunkX},${chunkZ},c${i}`, type: 'health', subtype: 'First Aid Kit', position: [cx2, 0.5, cz2], value: rng.int(20, 50) });
+    } else {
+      const weaponIdx = rng.int(1, 4);
+      const weaponNames = ['', 'Chair Leg', 'Shelf Plank', 'Table Leg'];
+      collectibles.push({ id: `${chunkX},${chunkZ},c${i}`, type: 'weapon', subtype: weaponNames[weaponIdx], position: [cx2, 0.5, cz2], value: 0, weaponIndex: weaponIdx });
+    }
+  }
+
+  const data: ChunkData = { items, section, settlements, restaurant, collectibles };
   chunkCache.set(key, data);
   return data;
 }
@@ -434,5 +466,15 @@ export function displaceItem(chunkX: number, chunkZ: number, index: number, dx: 
     item.collider.maxX += dx;
     item.collider.minZ += dz;
     item.collider.maxZ += dz;
+  }
+}
+
+export function removeCollectible(id: string) {
+  for (const [, data] of chunkCache) {
+    const idx = data.collectibles.findIndex(c => c.id === id);
+    if (idx !== -1) {
+      data.collectibles.splice(idx, 1);
+      return;
+    }
   }
 }

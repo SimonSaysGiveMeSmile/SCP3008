@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { useThree, useFrame } from '@react-three/fiber';
 import { useState } from 'react';
 import { Text } from '@react-three/drei';
-import { getChunkData, getSectionDisplay, CHUNK_SIZE, RENDER_DISTANCE, CEILING_HEIGHT, FurnitureItem, Settlement, Restaurant } from '../utils/worldGen';
+import { getChunkData, getSectionDisplay, CHUNK_SIZE, RENDER_DISTANCE, CEILING_HEIGHT, FurnitureItem, Settlement, Restaurant, Collectible } from '../utils/worldGen';
 import { useGameStore } from '../store/gameStore';
 
 const FLOOR_COLORS: Record<string, string> = {
@@ -299,6 +299,47 @@ function RestaurantArea({ restaurant }: { restaurant: Restaurant }) {
   );
 }
 
+const COLLECTIBLE_COLORS: Record<string, string> = {
+  food: '#ff8800',
+  water: '#0088ff',
+  health: '#00cc44',
+  weapon: '#cc44ff'
+};
+
+function CollectibleItems({ collectibles }: { collectibles: Collectible[] }) {
+  const frameRef = useRef(0);
+  const groupRef = useRef<THREE.Group>(null);
+
+  useFrame(() => {
+    frameRef.current++;
+    if (!groupRef.current) return;
+    const t = frameRef.current * 0.03;
+    groupRef.current.children.forEach((child, i) => {
+      child.position.y = 0.5 + Math.sin(t + i) * 0.1;
+      child.rotation.y = t * 0.5;
+    });
+  });
+
+  return (
+    <group ref={groupRef}>
+      {collectibles.map((c) => (
+        <mesh key={c.id} position={[c.position[0], c.position[1], c.position[2]]}>
+          {c.type === 'weapon' ? (
+            <cylinderGeometry args={[0.05, 0.05, 0.6, 6]} />
+          ) : (
+            <boxGeometry args={[0.3, 0.3, 0.3]} />
+          )}
+          <meshStandardMaterial
+            color={COLLECTIBLE_COLORS[c.type]}
+            emissive={COLLECTIBLE_COLORS[c.type]}
+            emissiveIntensity={0.4}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 function Chunk({ chunkX, chunkZ }: { chunkX: number; chunkZ: number }) {
   const chunkData = useMemo(() => getChunkData(chunkX, chunkZ), [chunkX, chunkZ]);
   const baseX = chunkX * CHUNK_SIZE;
@@ -350,6 +391,7 @@ function Chunk({ chunkX, chunkZ }: { chunkX: number; chunkZ: number }) {
       {chunkData.restaurant && (
         <RestaurantArea restaurant={chunkData.restaurant} />
       )}
+      <CollectibleItems collectibles={chunkData.collectibles} />
     </group>
   );
 }

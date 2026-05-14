@@ -2,9 +2,9 @@ import { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { sendMovement } from '../utils/network';
-import { checkCollision, checkMovableCollision, displaceItem, CHUNK_SIZE } from '../utils/worldGen';
+import { checkCollision, checkMovableCollision, displaceItem, removeCollectible, getChunkData, CHUNK_SIZE } from '../utils/worldGen';
 import { useGameStore, WEAPONS } from '../store/gameStore';
-import { playFootstep, playAttackSwing, playFlashlightClick } from '../utils/audio';
+import { playFootstep, playAttackSwing, playFlashlightClick, playHit } from '../utils/audio';
 
 const SPEED = 5;
 const SPRINT_MULTIPLIER = 1.8;
@@ -58,8 +58,10 @@ export default function Player() {
         const weapon = WEAPONS[store.currentWeapon];
         if (now - store.lastAttackTime >= weapon.cooldown) {
           store.setLastAttackTime(now);
+          store.setIsAttacking(true);
           performAttack(camera, weapon);
           playAttackSwing();
+          setTimeout(() => useGameStore.getState().setIsAttacking(false), 200);
         }
       }
     };
@@ -184,6 +186,33 @@ export default function Player() {
     // Expose position for minimap
     (window as any).__playerPos = { x: camera.position.x, z: camera.position.z };
     (window as any).__playerRot = camera.rotation.y;
+
+    // Collectible pickup check
+    const px = camera.position.x;
+    const pz = camera.position.z;
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dz2 = -1; dz2 <= 1; dz2++) {
+        const chunkData = getChunkData(cx + dx, cz + dz2);
+        for (const col of chunkData.collectibles) {
+          const cdx = col.position[0] - px;
+          const cdz = col.position[2] - pz;
+          if (cdx * cdx + cdz * cdz < 1.5) {
+            if (col.type === 'food') {
+              store.setHunger(Math.min(100, store.hunger + col.value));
+            } else if (col.type === 'water') {
+              store.setThirst(Math.min(100, store.thirst + col.value));
+            } else if (col.type === 'health') {
+              store.setHealth(Math.min(100, store.health + col.value));
+            } else if (col.type === 'weapon' && col.weaponIndex !== undefined) {
+              store.unlockWeapon(col.weaponIndex);
+            }
+            removeCollectible(col.id);
+            playHit();
+            break;
+          }
+        }
+      }
+    }
 
     // Hunger/thirst drain
     const now = Date.now();
