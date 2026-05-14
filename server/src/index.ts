@@ -15,12 +15,12 @@ const io = new Server(httpServer, {
 const players = new Map<string, PlayerState>();
 const npcs: NPCState[] = [];
 const gameState: GameState = {
-  timeOfDay: 0.25,
+  timeOfDay: 0.333,
   isNight: false,
   dayCount: 1
 };
 
-const DAY_DURATION = 120000; // 2 minutes real time = 1 game day
+const DAY_DURATION = 240000; // 4 minutes real time = 1 game day
 const NIGHT_START = 0.75;
 const NIGHT_END = 0.25;
 const NPC_COUNT = 40;

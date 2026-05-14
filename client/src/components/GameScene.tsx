@@ -9,7 +9,7 @@ import Lighting from './Lighting';
 export default function GameScene() {
   return (
     <Canvas
-      camera={{ fov: 75, near: 0.1, far: 500, position: [0, 1.7, 0] }}
+      camera={{ fov: 75, near: 0.1, far: 500, position: [0, 1.7, 0], rotation: [0, 0, 0] }}
       style={{ width: '100%', height: '100%' }}
     >
       <Lighting />

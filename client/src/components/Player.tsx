@@ -20,6 +20,11 @@ export default function Player() {
   const lastStatDrain = useRef(Date.now());
 
   useEffect(() => {
+    camera.rotation.set(0, 0, 0);
+    camera.rotation.order = 'YXZ';
+  }, [camera]);
+
+  useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       keys.current.add(e.code);
 
