@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { sendMovement } from '../utils/network';
 import { checkCollision, CHUNK_SIZE } from '../utils/worldGen';
 import { useGameStore, WEAPONS } from '../store/gameStore';
+import { playFootstep, playAttackSwing, playFlashlightClick } from '../utils/audio';
 
 const SPEED = 5;
 const SPRINT_MULTIPLIER = 1.8;
@@ -18,6 +19,7 @@ export default function Player() {
   const keys = useRef<Set<string>>(new Set());
   const lastSent = useRef(0);
   const lastStatDrain = useRef(Date.now());
+  const lastFootstep = useRef(0);
 
   useEffect(() => {
     camera.rotation.set(0, 0, 0);
@@ -44,6 +46,7 @@ export default function Player() {
       // Flashlight toggle
       if (e.code === 'KeyF') {
         useGameStore.getState().toggleFlashlight();
+        playFlashlightClick();
       }
     };
     const onKeyUp = (e: KeyboardEvent) => keys.current.delete(e.code);
@@ -56,6 +59,7 @@ export default function Player() {
         if (now - store.lastAttackTime >= weapon.cooldown) {
           store.setLastAttackTime(now);
           performAttack(camera, weapon);
+          playAttackSwing();
         }
       }
     };
@@ -145,6 +149,17 @@ export default function Player() {
 
     if (!blockedX && !npcBlockX) camera.position.x = newX;
     if (!blockedZ && !npcBlockZ) camera.position.z = newZ;
+
+    // Footstep audio
+    const moving = direction.current.length() > 0 && ((!blockedX && !npcBlockX) || (!blockedZ && !npcBlockZ));
+    if (moving) {
+      const stepInterval = sprint ? 250 : 400;
+      const now2 = Date.now();
+      if (now2 - lastFootstep.current > stepInterval) {
+        lastFootstep.current = now2;
+        playFootstep();
+      }
+    }
 
     camera.position.y = 1.7;
 

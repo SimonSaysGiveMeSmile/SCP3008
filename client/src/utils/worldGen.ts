@@ -22,10 +22,16 @@ export interface Settlement {
   population: number;
 }
 
+export interface Restaurant {
+  position: [number, number, number];
+  type: 'restaurant' | 'bistro' | 'food_court';
+}
+
 export interface ChunkData {
   items: FurnitureItem[];
   section: string;
   settlements: Settlement[];
+  restaurant: Restaurant | null;
 }
 
 export const CHUNK_SIZE = 40;
@@ -83,7 +89,7 @@ function makeCollider(x: number, z: number, w: number, d: number, rot: number): 
 
 function generateSectionItems(rng: SeededRNG, section: string, baseX: number, baseZ: number): FurnitureItem[] {
   const items: FurnitureItem[] = [];
-  const density = 120;
+  const density = 200;
   const isSpawnChunk = baseX === 0 && baseZ === 0;
 
   for (let i = 0; i < density; i++) {
@@ -299,7 +305,34 @@ export function getChunkData(chunkX: number, chunkZ: number): ChunkData {
     });
   }
 
-  const data: ChunkData = { items, section, settlements };
+  // Restaurants appear in ~12% of chunks
+  let restaurant: Restaurant | null = null;
+  const restaurantChance = seededRandom(seed + 777);
+  if (restaurantChance > 0.88) {
+    const types: Array<'restaurant' | 'bistro' | 'food_court'> = ['restaurant', 'bistro', 'food_court'];
+    restaurant = {
+      position: [baseX + rng.range(-8, 8), 0, baseZ + rng.range(-8, 8)],
+      type: rng.pick(types)
+    };
+    // Add restaurant furniture
+    const rx = restaurant.position[0];
+    const rz = restaurant.position[2];
+    for (let t = 0; t < 6; t++) {
+      const tx = rx + rng.range(-4, 4);
+      const tz = rz + rng.range(-4, 4);
+      items.push({ type: 'kitchen_table', position: [tx, 0, tz], rotation: 0, collider: makeCollider(tx, tz, 1.0, 1.0, 0) });
+      for (let c = 0; c < 4; c++) {
+        const cx2 = tx + (c < 2 ? -0.6 : 0.6);
+        const cz2 = tz + (c % 2 === 0 ? -0.5 : 0.5);
+        items.push({ type: 'kitchen_chair', position: [cx2, 0, cz2], rotation: rng.range(0, Math.PI * 2), collider: makeCollider(cx2, cz2, 0.4, 0.4, 0) });
+      }
+    }
+    // Food counter
+    items.push({ type: 'kitchen_counter', position: [rx - 5, 0, rz], rotation: Math.PI / 2, scale: [4, 1.1, 0.7], collider: makeCollider(rx - 5, rz, 0.7, 4, Math.PI / 2) });
+    items.push({ type: 'kitchen_counter', position: [rx + 5, 0, rz], rotation: Math.PI / 2, scale: [4, 1.1, 0.7], collider: makeCollider(rx + 5, rz, 0.7, 4, Math.PI / 2) });
+  }
+
+  const data: ChunkData = { items, section, settlements, restaurant };
   chunkCache.set(key, data);
   return data;
 }

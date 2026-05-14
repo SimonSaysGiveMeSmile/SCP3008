@@ -2,6 +2,7 @@ import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGameStore } from '../store/gameStore';
+import { playNPCVoice, playStoreClosing } from '../utils/audio';
 
 const SHIRT_COLOR = new THREE.Color('#ffcc00');
 const SHIRT_NIGHT = new THREE.Color('#cc9900');
@@ -17,6 +18,8 @@ export default function NPCEntities() {
   const headRef = useRef<THREE.InstancedMesh>(null);
   const legsRef = useRef<THREE.InstancedMesh>(null);
   const armsRef = useRef<THREE.InstancedMesh>(null);
+  const lastVoice = useRef(0);
+  const wasNight = useRef(false);
 
   const dummy = useMemo(() => new THREE.Object3D(), []);
 
@@ -25,6 +28,30 @@ export default function NPCEntities() {
     if (npcs.length === 0) return;
 
     const isNight = gameState.isNight;
+
+    // Play store closing announcement when night begins
+    if (isNight && !wasNight.current) {
+      playStoreClosing();
+    }
+    wasNight.current = isNight;
+
+    // Periodic NPC voices (nearby NPCs murmur/growl)
+    const now = Date.now();
+    if (now - lastVoice.current > (isNight ? 3000 : 8000)) {
+      lastVoice.current = now;
+      const playerPos = (window as any).__playerPos;
+      if (playerPos) {
+        for (const npc of npcs) {
+          const dx = npc.position.x - playerPos.x;
+          const dz = npc.position.z - playerPos.z;
+          if (dx * dx + dz * dz < 225) {
+            playNPCVoice(isNight);
+            break;
+          }
+        }
+      }
+    }
+
     const shirtCol = isNight ? SHIRT_NIGHT : SHIRT_COLOR;
     const pantsCol = isNight ? PANTS_NIGHT : PANTS_COLOR;
 

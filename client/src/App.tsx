@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useGameStore } from './store/gameStore';
 import { connectToServer, joinGame } from './utils/network';
+import { initAudio } from './utils/audio';
 import GameScene from './components/GameScene';
 import HUD from './components/HUD';
 import Minimap from './components/Minimap';
@@ -14,6 +15,7 @@ export default function App() {
 
   useEffect(() => {
     connectToServer();
+    initAudio();
   }, []);
 
   if (health <= 0) {

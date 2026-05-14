@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { useThree, useFrame } from '@react-three/fiber';
 import { useState } from 'react';
 import { Text } from '@react-three/drei';
-import { getChunkData, getSectionDisplay, CHUNK_SIZE, RENDER_DISTANCE, CEILING_HEIGHT, FurnitureItem, Settlement } from '../utils/worldGen';
+import { getChunkData, getSectionDisplay, CHUNK_SIZE, RENDER_DISTANCE, CEILING_HEIGHT, FurnitureItem, Settlement, Restaurant } from '../utils/worldGen';
 import { useGameStore } from '../store/gameStore';
 
 const FLOOR_COLORS: Record<string, string> = {
@@ -226,6 +226,59 @@ function SettlementArea({ settlement }: { settlement: Settlement }) {
   );
 }
 
+const MENU_ITEMS = [
+  'Swedish Meatballs - 79 kr',
+  'Salmon Plate - 99 kr',
+  'Veggie Balls - 69 kr',
+  'Chicken Schnitzel - 89 kr',
+  'Kids Pasta - 29 kr',
+  'Daim Cake - 35 kr',
+  'Cinnamon Bun - 15 kr',
+  'Hot Dog - 10 kr',
+  'Soft Serve - 12 kr',
+  'Coffee (free refill) - 15 kr',
+  'Lingonberry Juice - 12 kr',
+  'Princess Cake - 45 kr'
+];
+
+function RestaurantArea({ restaurant }: { restaurant: Restaurant }) {
+  const title = restaurant.type === 'restaurant' ? 'IKEA RESTAURANT'
+    : restaurant.type === 'bistro' ? 'IKEA BISTRO' : 'FOOD COURT';
+
+  return (
+    <group position={restaurant.position}>
+      {/* Menu board */}
+      <mesh position={[0, 3.5, -5]}>
+        <boxGeometry args={[5, 2.5, 0.1]} />
+        <meshStandardMaterial color="#003366" />
+      </mesh>
+      <Text position={[0, 4.3, -4.94]} fontSize={0.3} color="#ffcc00" anchorX="center" anchorY="middle" font={undefined}>
+        {title}
+      </Text>
+      <Text position={[0, 3.5, -4.94]} fontSize={0.13} color="#ffffff" anchorX="center" anchorY="middle" font={undefined} maxWidth={4.5} textAlign="center">
+        {MENU_ITEMS.slice(0, 8).join('\n')}
+      </Text>
+      {/* Overhead light */}
+      <pointLight position={[0, 4, 0]} intensity={0.5} distance={12} color="#fff5e0" />
+      {/* Floor marking */}
+      <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[12, 10]} />
+        <meshStandardMaterial color="#e8e0d0" />
+      </mesh>
+      {/* Tray return sign */}
+      <group position={[5, 2, 2]}>
+        <mesh>
+          <boxGeometry args={[1.2, 0.5, 0.05]} />
+          <meshStandardMaterial color="#ffcc00" />
+        </mesh>
+        <Text position={[0, 0, 0.03]} fontSize={0.12} color="#003399" anchorX="center" anchorY="middle" font={undefined}>
+          TRAY RETURN
+        </Text>
+      </group>
+    </group>
+  );
+}
+
 function Chunk({ chunkX, chunkZ }: { chunkX: number; chunkZ: number }) {
   const chunkData = useMemo(() => getChunkData(chunkX, chunkZ), [chunkX, chunkZ]);
   const baseX = chunkX * CHUNK_SIZE;
@@ -274,6 +327,9 @@ function Chunk({ chunkX, chunkZ }: { chunkX: number; chunkZ: number }) {
       {chunkData.settlements.map((s, i) => (
         <SettlementArea key={`s-${i}`} settlement={s} />
       ))}
+      {chunkData.restaurant && (
+        <RestaurantArea restaurant={chunkData.restaurant} />
+      )}
     </group>
   );
 }
