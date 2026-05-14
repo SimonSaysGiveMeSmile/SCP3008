@@ -40,6 +40,11 @@ export default function Player() {
         const store = useGameStore.getState();
         store.setSettingsOpen(!store.settingsOpen);
       }
+
+      // Flashlight toggle
+      if (e.code === 'KeyF') {
+        useGameStore.getState().toggleFlashlight();
+      }
     };
     const onKeyUp = (e: KeyboardEvent) => keys.current.delete(e.code);
 

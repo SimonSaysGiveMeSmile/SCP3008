@@ -131,7 +131,7 @@ function SectionSign({ position, text }: { position: [number, number, number]; t
       </mesh>
       <Text
         position={[0, 0, 0.05]}
-        fontSize={0.35}
+        fontSize={0.22}
         color="#003399"
         anchorX="center"
         anchorY="middle"

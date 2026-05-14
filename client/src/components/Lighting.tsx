@@ -9,11 +9,11 @@ function lerpColor(a: THREE.Color, b: THREE.Color, t: number): THREE.Color {
 }
 
 const DAY_AMBIENT = new THREE.Color('#fff5e6');
-const NIGHT_AMBIENT = new THREE.Color('#0a0a20');
+const NIGHT_AMBIENT = new THREE.Color('#141428');
 const DAY_DIR = new THREE.Color('#ffffff');
 const NIGHT_DIR = new THREE.Color('#1111aa');
 const DAY_FOG = new THREE.Color('#e8e0d4');
-const NIGHT_FOG = new THREE.Color('#0a0a15');
+const NIGHT_FOG = new THREE.Color('#101020');
 
 export default function Lighting() {
   const gameState = useGameStore(s => s.gameState);
@@ -41,12 +41,12 @@ export default function Lighting() {
     const smooth = nightFactor * nightFactor * (3 - 2 * nightFactor);
 
     if (ambientRef.current) {
-      ambientRef.current.intensity = lerp(0.45, 0.03, smooth);
+      ambientRef.current.intensity = lerp(0.45, 0.06, smooth);
       ambientRef.current.color = lerpColor(DAY_AMBIENT, NIGHT_AMBIENT, smooth);
     }
 
     if (dirRef.current) {
-      dirRef.current.intensity = lerp(0.7, 0.02, smooth);
+      dirRef.current.intensity = lerp(0.7, 0.05, smooth);
       dirRef.current.color = lerpColor(DAY_DIR, NIGHT_DIR, smooth);
     }
 

@@ -66,6 +66,10 @@ interface GameStore {
   setSettings: (s: Partial<GameSettings>) => void;
   settingsOpen: boolean;
   setSettingsOpen: (v: boolean) => void;
+
+  // Flashlight
+  flashlightOn: boolean;
+  toggleFlashlight: () => void;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -131,4 +135,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setSettings: (s) => set((state) => ({ settings: { ...state.settings, ...s } })),
   settingsOpen: false,
   setSettingsOpen: (v) => set({ settingsOpen: v }),
+
+  flashlightOn: false,
+  toggleFlashlight: () => set((state) => ({ flashlightOn: !state.flashlightOn })),
 }));

@@ -5,6 +5,7 @@ import IKEAWorld from './IKEAWorld';
 import NPCEntities from './NPCEntities';
 import RemotePlayers from './RemotePlayers';
 import Lighting from './Lighting';
+import Flashlight from './Flashlight';
 
 export default function GameScene() {
   return (
@@ -13,6 +14,7 @@ export default function GameScene() {
       style={{ width: '100%', height: '100%' }}
     >
       <Lighting />
+      <Flashlight />
       <Player />
       <IKEAWorld />
       <NPCEntities />

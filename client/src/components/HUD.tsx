@@ -28,6 +28,7 @@ export default function HUD() {
   const messages = useGameStore(s => s.messages);
   const currentWeapon = useGameStore(s => s.currentWeapon);
   const settings = useGameStore(s => s.settings);
+  const flashlightOn = useGameStore(s => s.flashlightOn);
   const [chatInput, setChatInput] = useState('');
   const [chatOpen, setChatOpen] = useState(false);
   const [fps, setFps] = useState(0);
@@ -140,6 +141,9 @@ export default function HUD() {
         <div style={{ fontSize: '12px', color: '#aaa', marginTop: '4px' }}>
           {timeDisplay} | Day {gameState.dayCount}
         </div>
+        <div style={{ fontSize: '11px', color: flashlightOn ? '#ffee88' : '#555', marginTop: '4px' }}>
+          {flashlightOn ? '[F] Flashlight ON' : '[F] Flashlight OFF'}
+        </div>
       </div>
 
       {/* Night warning */}
@@ -191,7 +195,7 @@ export default function HUD() {
         position: 'absolute', top: '20px', left: '20px',
         color: '#555', fontSize: '10px', fontFamily: 'Courier New'
       }}>
-        WASD Move | Shift Sprint | Tab Settings | Enter Chat | 1-4 Weapons | LMB Attack
+        WASD Move | Shift Sprint | Tab Settings | Enter Chat | F Flashlight | 1-4 Weapons
       </div>
 
       <style>{`

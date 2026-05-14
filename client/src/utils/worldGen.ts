@@ -38,15 +38,15 @@ const SECTIONS = [
 ];
 
 const SECTION_DISPLAY: Record<string, string> = {
-  bathroom: 'BADRUM',
-  kitchen: 'KÖK',
-  living: 'VARDAGSRUM',
-  bedroom: 'SOVRUM',
-  lighting: 'BELYSNING',
-  gardening: 'TRÄDGÅRD',
-  furniture: 'MÖBLER',
-  workspace: 'ARBETSPLATS',
-  productivity: 'KONTOR'
+  bathroom: 'BADRUM / Bathroom',
+  kitchen: 'KÖK / Kitchen',
+  living: 'VARDAGSRUM / Living Room',
+  bedroom: 'SOVRUM / Bedroom',
+  lighting: 'BELYSNING / Lighting',
+  gardening: 'TRÄDGÅRD / Garden',
+  furniture: 'MÖBLER / Furniture',
+  workspace: 'ARBETSPLATS / Workspace',
+  productivity: 'KONTOR / Office'
 };
 
 function seededRandom(seed: number): number {
@@ -83,7 +83,7 @@ function makeCollider(x: number, z: number, w: number, d: number, rot: number): 
 
 function generateSectionItems(rng: SeededRNG, section: string, baseX: number, baseZ: number): FurnitureItem[] {
   const items: FurnitureItem[] = [];
-  const density = 90;
+  const density = 120;
   const isSpawnChunk = baseX === 0 && baseZ === 0;
 
   for (let i = 0; i < density; i++) {
@@ -162,7 +162,7 @@ function generateSectionItems(rng: SeededRNG, section: string, baseX: number, ba
   }
 
   // Add aisle divider shelves (tall warehouse-style)
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 9; i++) {
     const x = baseX + rng.range(-CHUNK_SIZE / 2 + 3, CHUNK_SIZE / 2 - 3);
     const z = baseZ + rng.range(-CHUNK_SIZE / 2 + 3, CHUNK_SIZE / 2 - 3);
     if (isSpawnChunk && x * x + z * z < 25) continue;
