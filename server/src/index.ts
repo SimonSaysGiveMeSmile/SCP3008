@@ -104,9 +104,22 @@ function updateNPCs() {
         }
       }
     } else {
-      npc.rotation += (Math.random() - 0.5) * 0.1;
-      moveX = Math.sin(npc.rotation) * 0.02;
-      moveZ = Math.cos(npc.rotation) * 0.02;
+      // Daytime: active wandering with varied behavior
+      const behaviorRoll = Math.random();
+      if (behaviorRoll < 0.03) {
+        // Sudden direction change (like turning into an aisle)
+        npc.rotation += (Math.random() - 0.5) * Math.PI;
+      } else if (behaviorRoll < 0.15) {
+        // Pause (standing still, "stocking shelves")
+        moveX = 0;
+        moveZ = 0;
+      } else {
+        // Normal walking with slight drift
+        npc.rotation += (Math.random() - 0.5) * 0.15;
+        const speed = 0.035 + Math.random() * 0.015;
+        moveX = Math.sin(npc.rotation) * speed;
+        moveZ = Math.cos(npc.rotation) * speed;
+      }
     }
 
     // NPC-NPC collision avoidance

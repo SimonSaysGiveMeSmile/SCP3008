@@ -12,7 +12,7 @@ export default function Flashlight() {
     if (!spotRef.current) return;
 
     const on = useGameStore.getState().flashlightOn;
-    spotRef.current.intensity = on ? 2.5 : 0;
+    spotRef.current.intensity = on ? 4.5 : 0;
 
     spotRef.current.position.copy(camera.position);
 
@@ -26,10 +26,10 @@ export default function Flashlight() {
     <>
       <spotLight
         ref={spotRef}
-        angle={0.4}
+        angle={0.45}
         penumbra={0.3}
-        distance={25}
-        decay={1.5}
+        distance={35}
+        decay={1.2}
         color="#fffde6"
         castShadow={false}
         intensity={0}
