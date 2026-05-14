@@ -26,6 +26,8 @@ const NIGHT_END = 0.25;
 const NPC_COUNT = 40;
 const MAP_SIZE = 200;
 
+const NPC_HEALTH = 150;
+
 function initNPCs() {
   for (let i = 0; i < NPC_COUNT; i++) {
     const types: Array<'tall' | 'short' | 'normal'> = ['tall', 'short', 'normal'];
@@ -38,9 +40,21 @@ function initNPCs() {
       },
       rotation: Math.random() * Math.PI * 2,
       type: types[Math.floor(Math.random() * types.length)],
-      isAggressive: false
+      isAggressive: false,
+      health: NPC_HEALTH
     });
   }
+}
+
+function respawnNPC(npc: NPCState) {
+  npc.position = {
+    x: (Math.random() - 0.5) * MAP_SIZE,
+    y: 0,
+    z: (Math.random() - 0.5) * MAP_SIZE
+  };
+  npc.rotation = Math.random() * Math.PI * 2;
+  npc.health = NPC_HEALTH;
+  npc.isAggressive = false;
 }
 
 function getClosestPlayer(npcPos: Vec3): PlayerState | null {
@@ -63,6 +77,7 @@ function updateNPCs() {
   const NPC_RADIUS = 0.3;
 
   for (const npc of npcs) {
+    if (npc.health <= 0) continue;
     npc.isAggressive = isNight;
 
     let moveX = 0;
@@ -197,8 +212,15 @@ io.on('connection', (socket) => {
   socket.on('attack:npc', (data: { npcId: string; damage: number }) => {
     const npc = npcs.find(n => n.id === data.npcId);
     if (npc) {
-      // NPCs become aggressive when attacked
       npc.isAggressive = true;
+      const dmg = Math.min(data.damage, 30);
+      npc.health -= dmg;
+      if (npc.health <= 0) {
+        io.emit('npc:killed', { npcId: npc.id, killerId: socket.id });
+        // Respawn after 30 seconds at a random location
+        setTimeout(() => respawnNPC(npc), 30000);
+        npc.position = { x: 9999, y: -100, z: 9999 };
+      }
     }
   });
 

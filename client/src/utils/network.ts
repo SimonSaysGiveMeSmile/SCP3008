@@ -1,6 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 import { useGameStore } from '../store/gameStore';
 import { PlayerState, NPCState, GameState, ChatMessage, Vec3 } from '../../../shared/types';
+import { playHit, playDamage } from './audio';
 
 let socket: Socket | null = null;
 
@@ -52,6 +53,13 @@ export function connectToServer() {
   socket.on('player:damaged', (data: { id: string; health: number; attackerId: string }) => {
     if (data.id === socket!.id) {
       useGameStore.getState().setHealth(data.health);
+      playDamage();
+    }
+  });
+
+  socket.on('npc:killed', (data: { npcId: string; killerId: string }) => {
+    if (data.killerId === socket!.id) {
+      playHit();
     }
   });
 

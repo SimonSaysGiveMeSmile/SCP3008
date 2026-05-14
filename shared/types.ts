@@ -18,6 +18,7 @@ export interface NPCState {
   rotation: number;
   type: 'tall' | 'short' | 'normal';
   isAggressive: boolean;
+  health: number;
 }
 
 export interface GameState {
