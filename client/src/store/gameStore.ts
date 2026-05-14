@@ -70,6 +70,10 @@ interface GameStore {
   // Flashlight
   flashlightOn: boolean;
   toggleFlashlight: () => void;
+
+  // Movable items displaced by player
+  displacedItems: Map<string, { x: number; z: number }>;
+  displaceItem: (key: string, x: number, z: number) => void;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -138,4 +142,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   flashlightOn: false,
   toggleFlashlight: () => set((state) => ({ flashlightOn: !state.flashlightOn })),
+
+  displacedItems: new Map(),
+  displaceItem: (key, x, z) => set((state) => {
+    const newMap = new Map(state.displacedItems);
+    newMap.set(key, { x, z });
+    return { displacedItems: newMap };
+  }),
 }));

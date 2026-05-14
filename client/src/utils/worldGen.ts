@@ -13,6 +13,7 @@ export interface FurnitureItem {
   rotation: number;
   scale?: [number, number, number];
   collider: AABB;
+  movable?: boolean;
 }
 
 export interface Settlement {
@@ -102,67 +103,94 @@ function generateSectionItems(rng: SeededRNG, section: string, baseX: number, ba
 
     switch (section) {
       case 'bathroom':
-        if (i < 10) items.push({ type: 'bathtub', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.8, 0.8, rot) });
-        else if (i < 20) items.push({ type: 'sink', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.6, 0.5, rot) });
-        else if (i < 30) items.push({ type: 'mirror_cabinet', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.8, 0.3, rot) });
-        else if (i < 38) items.push({ type: 'towel_rack', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.8, 0.2, rot) });
-        else items.push({ type: 'toilet', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.5, 0.7, rot) });
+        if (i < 25) items.push({ type: 'bathtub', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.8, 0.8, rot) });
+        else if (i < 50) items.push({ type: 'sink', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.6, 0.5, rot) });
+        else if (i < 75) items.push({ type: 'mirror_cabinet', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.8, 0.3, rot) });
+        else if (i < 100) items.push({ type: 'cabinet_tall', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.6, 0.4, rot) });
+        else if (i < 130) items.push({ type: 'shelf', position: [x, 0, z], rotation: rot, scale: [1.8, 2.0, 0.5], collider: makeCollider(x, z, 1.8, 0.5, rot) });
+        else if (i < 155) items.push({ type: 'toilet', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.5, 0.7, rot) });
+        else if (i < 175) items.push({ type: 'towel_rack', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.8, 0.2, rot), movable: true });
+        else items.push({ type: 'storage_box', position: [x, 0, z], rotation: rot, scale: [0.4, 0.3, 0.3], collider: makeCollider(x, z, 0.4, 0.3, rot), movable: true });
         break;
       case 'kitchen':
-        if (i < 12) items.push({ type: 'kitchen_counter', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 2.0, 0.6, rot) });
-        else if (i < 22) items.push({ type: 'kitchen_table', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.4, 0.9, rot) });
-        else if (i < 30) items.push({ type: 'kitchen_chair', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.45, 0.45, rot) });
-        else if (i < 38) items.push({ type: 'cabinet_tall', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.6, 0.4, rot) });
-        else items.push({ type: 'kitchen_island', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.8, 0.9, rot) });
+        if (i < 30) items.push({ type: 'kitchen_counter', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 2.0, 0.6, rot) });
+        else if (i < 55) items.push({ type: 'kitchen_table', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.4, 0.9, rot) });
+        else if (i < 80) items.push({ type: 'cabinet_tall', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.6, 0.4, rot) });
+        else if (i < 105) items.push({ type: 'kitchen_island', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.8, 0.9, rot) });
+        else if (i < 130) items.push({ type: 'shelf', position: [x, 0, z], rotation: rot, scale: [2.0, 2.2, 0.5], collider: makeCollider(x, z, 2.0, 0.5, rot) });
+        else if (i < 160) items.push({ type: 'kitchen_chair', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.45, 0.45, rot), movable: true });
+        else if (i < 180) items.push({ type: 'storage_box', position: [x, 0, z], rotation: rot, scale: [0.5, 0.4, 0.4], collider: makeCollider(x, z, 0.5, 0.4, rot), movable: true });
+        else items.push({ type: 'plant_pot', position: [x, 0, z], rotation: 0, collider: makeCollider(x, z, 0.4, 0.4, 0), movable: true });
         break;
       case 'living':
-        if (i < 10) items.push({ type: 'sofa', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 2.2, 0.9, rot) });
-        else if (i < 18) items.push({ type: 'coffee_table', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.2, 0.6, rot) });
-        else if (i < 25) items.push({ type: 'tv_stand', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.6, 0.4, rot) });
-        else if (i < 32) items.push({ type: 'bookshelf', position: [x, 0, z], rotation: rot, scale: [1.2, 2.2, 0.4], collider: makeCollider(x, z, 1.2, 0.4, rot) });
-        else if (i < 38) items.push({ type: 'armchair', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.9, 0.9, rot) });
-        else items.push({ type: 'floor_lamp', position: [x, 0, z], rotation: 0, collider: makeCollider(x, z, 0.3, 0.3, 0) });
+        if (i < 25) items.push({ type: 'sofa', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 2.2, 0.9, rot) });
+        else if (i < 50) items.push({ type: 'bookshelf', position: [x, 0, z], rotation: rot, scale: [1.2, 2.2, 0.4], collider: makeCollider(x, z, 1.2, 0.4, rot) });
+        else if (i < 70) items.push({ type: 'tv_stand', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.6, 0.4, rot) });
+        else if (i < 95) items.push({ type: 'shelf', position: [x, 0, z], rotation: rot, scale: [2.5, 2.5, 0.5], collider: makeCollider(x, z, 2.5, 0.5, rot) });
+        else if (i < 120) items.push({ type: 'armchair', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.9, 0.9, rot) });
+        else if (i < 145) items.push({ type: 'coffee_table', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.2, 0.6, rot) });
+        else if (i < 170) items.push({ type: 'wardrobe', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.5, 0.6, rot) });
+        else if (i < 185) items.push({ type: 'floor_lamp', position: [x, 0, z], rotation: 0, collider: makeCollider(x, z, 0.3, 0.3, 0), movable: true });
+        else items.push({ type: 'plant_pot', position: [x, 0, z], rotation: 0, collider: makeCollider(x, z, 0.4, 0.4, 0), movable: true });
         break;
       case 'bedroom':
-        if (i < 12) items.push({ type: 'bed', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 2.0, 1.6, rot) });
-        else if (i < 20) items.push({ type: 'wardrobe', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.5, 0.6, rot) });
-        else if (i < 28) items.push({ type: 'nightstand', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.5, 0.4, rot) });
-        else if (i < 35) items.push({ type: 'dresser', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.2, 0.5, rot) });
-        else items.push({ type: 'floor_lamp', position: [x, 0, z], rotation: 0, collider: makeCollider(x, z, 0.3, 0.3, 0) });
+        if (i < 30) items.push({ type: 'bed', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 2.0, 1.6, rot) });
+        else if (i < 60) items.push({ type: 'wardrobe', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.5, 0.6, rot) });
+        else if (i < 85) items.push({ type: 'dresser', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.2, 0.5, rot) });
+        else if (i < 110) items.push({ type: 'bookshelf', position: [x, 0, z], rotation: rot, scale: [1.0, 2.0, 0.4], collider: makeCollider(x, z, 1.0, 0.4, rot) });
+        else if (i < 135) items.push({ type: 'shelf', position: [x, 0, z], rotation: rot, scale: [2.0, 2.2, 0.5], collider: makeCollider(x, z, 2.0, 0.5, rot) });
+        else if (i < 160) items.push({ type: 'nightstand', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.5, 0.4, rot), movable: true });
+        else if (i < 180) items.push({ type: 'floor_lamp', position: [x, 0, z], rotation: 0, collider: makeCollider(x, z, 0.3, 0.3, 0), movable: true });
+        else items.push({ type: 'storage_box', position: [x, 0, z], rotation: rot, scale: [0.5, 0.4, 0.4], collider: makeCollider(x, z, 0.5, 0.4, rot), movable: true });
         break;
       case 'lighting':
-        if (i < 15) items.push({ type: 'floor_lamp', position: [x, 0, z], rotation: 0, collider: makeCollider(x, z, 0.4, 0.4, 0) });
-        else if (i < 28) items.push({ type: 'lamp_display', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.0, 0.6, rot) });
-        else if (i < 38) items.push({ type: 'chandelier_display', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.8, 0.8, rot) });
-        else items.push({ type: 'shelf', position: [x, 0, z], rotation: rot, scale: [2, 1.8, 0.5], collider: makeCollider(x, z, 2, 0.5, rot) });
+        if (i < 30) items.push({ type: 'shelf', position: [x, 0, z], rotation: rot, scale: [2.5, 2.5, 0.5], collider: makeCollider(x, z, 2.5, 0.5, rot) });
+        else if (i < 60) items.push({ type: 'lamp_display', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.0, 0.6, rot) });
+        else if (i < 90) items.push({ type: 'chandelier_display', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.8, 0.8, rot) });
+        else if (i < 120) items.push({ type: 'bookshelf', position: [x, 0, z], rotation: rot, scale: [1.5, 2.8, 0.5], collider: makeCollider(x, z, 1.5, 0.5, rot) });
+        else if (i < 150) items.push({ type: 'display_table', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.8, 0.9, rot) });
+        else if (i < 175) items.push({ type: 'floor_lamp', position: [x, 0, z], rotation: 0, collider: makeCollider(x, z, 0.4, 0.4, 0), movable: true });
+        else items.push({ type: 'desk_lamp', position: [x, 0, z], rotation: 0, collider: makeCollider(x, z, 0.25, 0.25, 0), movable: true });
         break;
       case 'gardening':
-        if (i < 12) items.push({ type: 'plant_pot', position: [x, 0, z], rotation: 0, collider: makeCollider(x, z, 0.5, 0.5, 0) });
-        else if (i < 22) items.push({ type: 'garden_shelf', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.5, 0.5, rot) });
-        else if (i < 32) items.push({ type: 'outdoor_table', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.2, 1.2, rot) });
-        else if (i < 40) items.push({ type: 'outdoor_chair', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.6, 0.6, rot) });
-        else items.push({ type: 'planter_box', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.0, 0.4, rot) });
+        if (i < 30) items.push({ type: 'garden_shelf', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.5, 0.5, rot) });
+        else if (i < 55) items.push({ type: 'shelf', position: [x, 0, z], rotation: rot, scale: [2.0, 2.0, 0.6], collider: makeCollider(x, z, 2.0, 0.6, rot) });
+        else if (i < 80) items.push({ type: 'outdoor_table', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.2, 1.2, rot) });
+        else if (i < 110) items.push({ type: 'planter_box', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.0, 0.4, rot) });
+        else if (i < 140) items.push({ type: 'bookshelf', position: [x, 0, z], rotation: rot, scale: [1.2, 2.2, 0.5], collider: makeCollider(x, z, 1.2, 0.5, rot) });
+        else if (i < 165) items.push({ type: 'outdoor_chair', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.6, 0.6, rot), movable: true });
+        else if (i < 185) items.push({ type: 'plant_pot', position: [x, 0, z], rotation: 0, collider: makeCollider(x, z, 0.5, 0.5, 0), movable: true });
+        else items.push({ type: 'storage_box', position: [x, 0, z], rotation: rot, scale: [0.5, 0.35, 0.4], collider: makeCollider(x, z, 0.5, 0.4, rot), movable: true });
         break;
       case 'furniture':
-        if (i < 10) items.push({ type: 'shelf', position: [x, 0, z], rotation: rot, scale: [3, 3, 0.6], collider: makeCollider(x, z, 3, 0.6, rot) });
-        else if (i < 18) items.push({ type: 'display_table', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.8, 0.9, rot) });
-        else if (i < 26) items.push({ type: 'wardrobe', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.5, 0.6, rot) });
-        else if (i < 34) items.push({ type: 'bookshelf', position: [x, 0, z], rotation: rot, scale: [1.0, 2.5, 0.4], collider: makeCollider(x, z, 1.0, 0.4, rot) });
-        else items.push({ type: 'cabinet_tall', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.8, 0.5, rot) });
+        if (i < 30) items.push({ type: 'shelf', position: [x, 0, z], rotation: rot, scale: [3, 3, 0.6], collider: makeCollider(x, z, 3, 0.6, rot) });
+        else if (i < 55) items.push({ type: 'wardrobe', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.5, 0.6, rot) });
+        else if (i < 80) items.push({ type: 'bookshelf', position: [x, 0, z], rotation: rot, scale: [1.0, 2.5, 0.4], collider: makeCollider(x, z, 1.0, 0.4, rot) });
+        else if (i < 105) items.push({ type: 'display_table', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.8, 0.9, rot) });
+        else if (i < 130) items.push({ type: 'sofa', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 2.2, 0.9, rot) });
+        else if (i < 155) items.push({ type: 'cabinet_tall', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.8, 0.5, rot) });
+        else if (i < 175) items.push({ type: 'dresser', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.2, 0.5, rot) });
+        else items.push({ type: 'storage_box', position: [x, 0, z], rotation: rot, scale: [0.5, 0.4, 0.4], collider: makeCollider(x, z, 0.5, 0.4, rot), movable: true });
         break;
       case 'workspace':
-        if (i < 12) items.push({ type: 'desk', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.6, 0.8, rot) });
-        else if (i < 22) items.push({ type: 'office_chair', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.6, 0.6, rot) });
-        else if (i < 30) items.push({ type: 'bookshelf', position: [x, 0, z], rotation: rot, scale: [0.8, 2.0, 0.35], collider: makeCollider(x, z, 0.8, 0.35, rot) });
-        else if (i < 38) items.push({ type: 'filing_cabinet', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.5, 0.6, rot) });
-        else items.push({ type: 'desk_lamp', position: [x, 0, z], rotation: 0, collider: makeCollider(x, z, 0.3, 0.3, 0) });
+        if (i < 30) items.push({ type: 'desk', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.6, 0.8, rot) });
+        else if (i < 55) items.push({ type: 'bookshelf', position: [x, 0, z], rotation: rot, scale: [1.2, 2.4, 0.4], collider: makeCollider(x, z, 1.2, 0.4, rot) });
+        else if (i < 80) items.push({ type: 'shelf', position: [x, 0, z], rotation: rot, scale: [2.0, 2.0, 0.5], collider: makeCollider(x, z, 2.0, 0.5, rot) });
+        else if (i < 105) items.push({ type: 'filing_cabinet', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.5, 0.6, rot) });
+        else if (i < 130) items.push({ type: 'standing_desk', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.4, 0.7, rot) });
+        else if (i < 155) items.push({ type: 'whiteboard', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.5, 0.1, rot) });
+        else if (i < 175) items.push({ type: 'office_chair', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.6, 0.6, rot), movable: true });
+        else items.push({ type: 'desk_lamp', position: [x, 0, z], rotation: 0, collider: makeCollider(x, z, 0.3, 0.3, 0), movable: true });
         break;
       case 'productivity':
-        if (i < 12) items.push({ type: 'standing_desk', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.4, 0.7, rot) });
-        else if (i < 20) items.push({ type: 'shelf', position: [x, 0, z], rotation: rot, scale: [1.5, 1.8, 0.4], collider: makeCollider(x, z, 1.5, 0.4, rot) });
-        else if (i < 28) items.push({ type: 'whiteboard', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.5, 0.1, rot) });
-        else if (i < 36) items.push({ type: 'office_chair', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.6, 0.6, rot) });
-        else items.push({ type: 'storage_box', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.5, 0.4, rot) });
+        if (i < 30) items.push({ type: 'standing_desk', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.4, 0.7, rot) });
+        else if (i < 55) items.push({ type: 'shelf', position: [x, 0, z], rotation: rot, scale: [2.0, 2.2, 0.5], collider: makeCollider(x, z, 2.0, 0.5, rot) });
+        else if (i < 80) items.push({ type: 'bookshelf', position: [x, 0, z], rotation: rot, scale: [1.5, 2.5, 0.4], collider: makeCollider(x, z, 1.5, 0.4, rot) });
+        else if (i < 105) items.push({ type: 'whiteboard', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.5, 0.1, rot) });
+        else if (i < 130) items.push({ type: 'desk', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 1.6, 0.8, rot) });
+        else if (i < 155) items.push({ type: 'filing_cabinet', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.5, 0.6, rot) });
+        else if (i < 175) items.push({ type: 'office_chair', position: [x, 0, z], rotation: rot, collider: makeCollider(x, z, 0.6, 0.6, rot), movable: true });
+        else items.push({ type: 'storage_box', position: [x, 0, z], rotation: rot, scale: [0.5, 0.4, 0.4], collider: makeCollider(x, z, 0.5, 0.4, rot), movable: true });
         break;
     }
   }
@@ -362,4 +390,49 @@ export function checkCollision(px: number, pz: number, radius: number, chunks: A
     }
   }
   return false;
+}
+
+export function checkMovableCollision(px: number, pz: number, radius: number, chunks: Array<{x: number; z: number}>): { hit: boolean; itemKey: string | null; pushX: number; pushZ: number } {
+  for (const chunk of chunks) {
+    const data = getChunkData(chunk.x, chunk.z);
+    for (let i = 0; i < data.items.length; i++) {
+      const item = data.items[i];
+      if (!item.movable) continue;
+      const c = item.collider;
+      if (c.maxX - c.minX < 0.01 && c.maxZ - c.minZ < 0.01) continue;
+      const closestX = Math.max(c.minX, Math.min(px, c.maxX));
+      const closestZ = Math.max(c.minZ, Math.min(pz, c.maxZ));
+      const dx = px - closestX;
+      const dz = pz - closestZ;
+      if (dx * dx + dz * dz < radius * radius) {
+        const centerX = (c.minX + c.maxX) / 2;
+        const centerZ = (c.minZ + c.maxZ) / 2;
+        const pushDx = centerX - px;
+        const pushDz = centerZ - pz;
+        const pushDist = Math.sqrt(pushDx * pushDx + pushDz * pushDz) || 1;
+        return {
+          hit: true,
+          itemKey: `${chunk.x},${chunk.z},${i}`,
+          pushX: (pushDx / pushDist) * 0.3,
+          pushZ: (pushDz / pushDist) * 0.3
+        };
+      }
+    }
+  }
+  return { hit: false, itemKey: null, pushX: 0, pushZ: 0 };
+}
+
+export function displaceItem(chunkX: number, chunkZ: number, index: number, dx: number, dz: number) {
+  const data = getChunkData(chunkX, chunkZ);
+  if (index < data.items.length) {
+    const item = data.items[index];
+    item.position[0] += dx;
+    item.position[2] += dz;
+    const w = item.collider.maxX - item.collider.minX;
+    const d = item.collider.maxZ - item.collider.minZ;
+    item.collider.minX += dx;
+    item.collider.maxX += dx;
+    item.collider.minZ += dz;
+    item.collider.maxZ += dz;
+  }
 }

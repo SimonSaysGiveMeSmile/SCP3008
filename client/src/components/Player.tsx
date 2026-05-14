@@ -2,7 +2,7 @@ import { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { sendMovement } from '../utils/network';
-import { checkCollision, CHUNK_SIZE } from '../utils/worldGen';
+import { checkCollision, checkMovableCollision, displaceItem, CHUNK_SIZE } from '../utils/worldGen';
 import { useGameStore, WEAPONS } from '../store/gameStore';
 import { playFootstep, playAttackSwing, playFlashlightClick } from '../utils/audio';
 
@@ -123,9 +123,27 @@ export default function Player() {
     const newX = camera.position.x + velocity.current.x;
     const newZ = camera.position.z + velocity.current.z;
 
-    // Check furniture collisions
-    const blockedX = checkCollision(newX, camera.position.z, PLAYER_RADIUS, nearbyChunks);
-    const blockedZ = checkCollision(camera.position.x, newZ, PLAYER_RADIUS, nearbyChunks);
+    // Check furniture collisions — push movable items, block on fixed ones
+    let blockedX = checkCollision(newX, camera.position.z, PLAYER_RADIUS, nearbyChunks);
+    let blockedZ = checkCollision(camera.position.x, newZ, PLAYER_RADIUS, nearbyChunks);
+
+    // If blocked, check if it's a movable item we can push
+    if (blockedX) {
+      const mov = checkMovableCollision(newX, camera.position.z, PLAYER_RADIUS, nearbyChunks);
+      if (mov.hit && mov.itemKey) {
+        const parts = mov.itemKey.split(',');
+        displaceItem(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2]), mov.pushX, mov.pushZ);
+        blockedX = false;
+      }
+    }
+    if (blockedZ) {
+      const mov = checkMovableCollision(camera.position.x, newZ, PLAYER_RADIUS, nearbyChunks);
+      if (mov.hit && mov.itemKey) {
+        const parts = mov.itemKey.split(',');
+        displaceItem(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2]), mov.pushX, mov.pushZ);
+        blockedZ = false;
+      }
+    }
 
     // Check NPC collisions (treat NPCs as cylinders with radius 0.3)
     const npcRadius = 0.3;

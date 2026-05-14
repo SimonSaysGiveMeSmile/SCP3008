@@ -82,6 +82,7 @@ function getItemDimensions(item: FurnitureItem): [number, number, number] {
 function InstancedChunk({ items }: { items: FurnitureItem[] }) {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const dummy = useMemo(() => new THREE.Object3D(), []);
+  const frameCount = useRef(0);
 
   const colorArray = useMemo(() => {
     const arr = new Float32Array(items.length * 3);
@@ -98,7 +99,7 @@ function InstancedChunk({ items }: { items: FurnitureItem[] }) {
     if (!meshRef.current) return;
     items.forEach((item, i) => {
       const dims = getItemDimensions(item);
-      dummy.position.set(item.position[0], dims[1] / 2, item.position[2]);
+      dummy.position.set(item.position[0], item.position[1] + dims[1] / 2, item.position[2]);
       dummy.rotation.set(0, item.rotation, 0);
       dummy.scale.set(dims[0], dims[1], dims[2]);
       dummy.updateMatrix();
@@ -106,6 +107,25 @@ function InstancedChunk({ items }: { items: FurnitureItem[] }) {
     });
     meshRef.current.instanceMatrix.needsUpdate = true;
   }, [items, dummy]);
+
+  useFrame(() => {
+    frameCount.current++;
+    if (frameCount.current % 15 !== 0) return;
+    if (!meshRef.current) return;
+    let needsUpdate = false;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (!item.movable) continue;
+      const dims = getItemDimensions(item);
+      dummy.position.set(item.position[0], item.position[1] + dims[1] / 2, item.position[2]);
+      dummy.rotation.set(0, item.rotation, 0);
+      dummy.scale.set(dims[0], dims[1], dims[2]);
+      dummy.updateMatrix();
+      meshRef.current!.setMatrixAt(i, dummy.matrix);
+      needsUpdate = true;
+    }
+    if (needsUpdate) meshRef.current.instanceMatrix.needsUpdate = true;
+  });
 
   if (items.length === 0) return null;
 
