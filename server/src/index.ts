@@ -308,7 +308,7 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = 5002;
+const PORT = Number(process.env.PORT) || 5002;
 httpServer.listen(PORT, () => {
   console.log(`SCP-3008 server running on port ${PORT}`);
 });
