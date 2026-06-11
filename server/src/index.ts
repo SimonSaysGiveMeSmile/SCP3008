@@ -7,6 +7,10 @@ import { PlayerState, NPCState, GameState, Vec3 } from '../../shared/types';
 const app = express();
 app.use(cors());
 
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok', players: players.size });
+});
+
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: { origin: '*' }
