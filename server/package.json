@@ -1,11 +1,12 @@
 {
   "name": "scp-3008-server",
+  "type": "module",
   "private": true,
   "version": "1.0.0",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/server/src/index.js"
   },
   "dependencies": {
     "express": "^4.18.2",
