@@ -5,6 +5,7 @@ import { sendMovement } from '../utils/network';
 import { checkCollision, checkMovableCollision, displaceItem, removeCollectible, getChunkData, CHUNK_SIZE } from '../utils/worldGen';
 import { useGameStore, WEAPONS } from '../store/gameStore';
 import { playFootstep, playAttackSwing, playFlashlightClick, playHit, playObjectPush, playObjectHit } from '../utils/audio';
+import { touch } from '../touch';
 
 const SPEED = 5;
 const SPRINT_MULTIPLIER = 1.8;
@@ -81,7 +82,7 @@ export default function Player() {
     if (store.settingsOpen) return;
 
     const k = keys.current;
-    const sprint = k.has('ShiftLeft') || k.has('ShiftRight');
+    const sprint = k.has('ShiftLeft') || k.has('ShiftRight') || touch.sprint;
     const speed = SPEED * (sprint ? SPRINT_MULTIPLIER : 1);
 
     // Update FOV from settings
@@ -98,6 +99,9 @@ export default function Player() {
     if (k.has('KeyS')) direction.current.z += 1;
     if (k.has('KeyA')) direction.current.x -= 1;
     if (k.has('KeyD')) direction.current.x += 1;
+    // touch joystick (analog) — up = forward
+    direction.current.x += touch.mx;
+    direction.current.z += touch.my;
     direction.current.normalize();
 
     const forward = new THREE.Vector3();

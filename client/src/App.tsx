@@ -8,6 +8,8 @@ import Minimap from './components/Minimap';
 import SettingsMenu from './components/SettingsMenu';
 import LoginScreen from './components/LoginScreen';
 import DialogueSystem from './components/DialogueSystem';
+import MobileControls from './components/MobileControls';
+import { isTouchDevice } from './touch';
 
 export default function App() {
   const joined = useGameStore(s => s.joined);
@@ -54,6 +56,7 @@ export default function App() {
       <HUD />
       <Minimap />
       <DialogueSystem />
+      {isTouchDevice() && !settingsOpen && <MobileControls />}
       {settingsOpen && <SettingsMenu />}
     </div>
   );

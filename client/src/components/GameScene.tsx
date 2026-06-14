@@ -6,8 +6,11 @@ import NPCEntities from './NPCEntities';
 import RemotePlayers from './RemotePlayers';
 import Lighting from './Lighting';
 import Flashlight from './Flashlight';
+import TouchLook from './TouchLook';
+import { isTouchDevice } from '../touch';
 
 export default function GameScene() {
+  const isTouch = isTouchDevice();
   return (
     <Canvas
       camera={{ fov: 75, near: 0.1, far: 500, position: [0, 1.7, 0], rotation: [0, 0, 0] }}
@@ -19,7 +22,7 @@ export default function GameScene() {
       <IKEAWorld />
       <NPCEntities />
       <RemotePlayers />
-      <PointerLockControls />
+      {isTouch ? <TouchLook /> : <PointerLockControls />}
     </Canvas>
   );
 }
