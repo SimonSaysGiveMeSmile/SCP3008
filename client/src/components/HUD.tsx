@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useGameStore, WEAPONS } from '../store/gameStore';
 import { sendChat } from '../utils/network';
+import { isTouchDevice } from '../touch';
 
 function StatBar({ value, max, color, label }: { value: number; max: number; color: string; label: string }) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100));
@@ -151,7 +152,7 @@ export default function HUD() {
           ))}
         </div>
         <div style={{ color: '#555', fontSize: '9px', marginTop: '4px' }}>
-          [1-4] Switch | LMB Attack
+          {isTouchDevice() ? 'Tap a weapon · HIT to attack' : '[1-4] Switch | LMB Attack'}
         </div>
       </div>
 
@@ -221,7 +222,9 @@ export default function HUD() {
         position: 'absolute', top: '20px', left: '20px',
         color: '#555', fontSize: '10px', fontFamily: 'Courier New'
       }}>
-        WASD Move | Shift Sprint | Tab Settings | Enter Chat | F Flashlight | 1-4 Weapons
+        {isTouchDevice()
+          ? 'Joystick move · drag to look · ☰ menu · HIT · 1–4 weapons · flashlight'
+          : 'WASD Move | Shift Sprint | Tab Settings | Enter Chat | F Flashlight | 1-4 Weapons'}
       </div>
 
       <style>{`

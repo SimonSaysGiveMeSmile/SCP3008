@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { isTouchDevice } from '../touch';
 
 interface Props {
   onJoin: (name: string) => void;
@@ -111,7 +112,9 @@ export default function LoginScreen({ onJoin }: Props) {
         </div>
 
         <p style={{ color: '#444', marginTop: '1.2rem', fontSize: '0.7rem' }}>
-          WASD Move | Mouse Look | Shift Sprint | F Flashlight | LMB Attack
+          {isTouchDevice()
+            ? 'Joystick to move · drag to look · HIT · 1–4 weapons · flashlight'
+            : 'WASD Move | Mouse Look | Shift Sprint | F Flashlight | LMB Attack'}
         </p>
       </div>
     </div>
