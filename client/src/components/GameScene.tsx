@@ -6,8 +6,8 @@ import NPCEntities from './NPCEntities';
 import RemotePlayers from './RemotePlayers';
 import Lighting from './Lighting';
 import Flashlight from './Flashlight';
-import TouchLook from './TouchLook';
-import { isTouchDevice } from '../touch';
+import { TouchLook } from '../shared-touch/TouchLook';
+import { isTouchDevice } from '../shared-touch/touch';
 
 export default function GameScene() {
   const isTouch = isTouchDevice();

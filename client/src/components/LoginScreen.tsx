@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { isTouchDevice } from '../touch';
+import { isTouchDevice } from '../shared-touch/touch';
 
 interface Props {
   onJoin: (name: string) => void;

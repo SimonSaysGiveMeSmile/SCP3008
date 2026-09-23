@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useGameStore, WEAPONS } from '../store/gameStore';
 import { sendChat } from '../utils/network';
-import { isTouchDevice } from '../touch';
+import { isTouchDevice } from '../shared-touch/touch';
 
 function StatBar({ value, max, color, label }: { value: number; max: number; color: string; label: string }) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100));

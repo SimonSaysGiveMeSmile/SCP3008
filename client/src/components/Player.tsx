@@ -5,7 +5,7 @@ import { sendMovement } from '../utils/network';
 import { checkCollision, checkMovableCollision, displaceItem, removeCollectible, getChunkData, CHUNK_SIZE } from '../utils/worldGen';
 import { useGameStore, WEAPONS } from '../store/gameStore';
 import { playFootstep, playAttackSwing, playFlashlightClick, playHit, playObjectPush, playObjectHit } from '../utils/audio';
-import { touch } from '../touch';
+import { touch } from '../shared-touch/touch';
 
 const SPEED = 5;
 const SPRINT_MULTIPLIER = 1.8;
