@@ -1,0 +1,15 @@
+# SCP-3008: The Infinite IKEA
+
+> SCP-3008: The Infinite IKEA is a free multiplayer first-person survival horror game that runs in the browser, based on the SCP Foundation entry SCP-3008, "A Perfectly Normal, Regular Old IKEA." You are trapped inside an endless IKEA: by day its faceless staff wander aimlessly, and at night they turn hostile and hunt you down.
+
+Features: an infinite, chunk-based procedurally generated IKEA interior (living rooms, bedrooms, kitchens and more); SCP-3008-2 entities, faceless humanoids in yellow shirts and blue pants; a day/night cycle that switches the staff from passive to aggressive; real-time multiplayer with in-game chat; and survival mechanics (health, sprinting, death). Controls: WASD to move, mouse to look, Shift to sprint, Enter to open chat, Esc to close it, click to lock the cursor. Built with React, TypeScript, Three.js (react-three-fiber) and Socket.io. A fan game based on SCP-3008 by Mortos, licensed under CC BY-SA 3.0.
+
+## Pages
+- [Home / Play](https://scp-3008.vercel.app/): the game itself
+
+## About
+- [Made by Simon Tian](https://www.hisimon.pro): engineer and founder who builds AI products, apps and games
+- [More apps by Simon Tian](https://www.hisimon.pro/projects)
+- [More browser games by Simon Tian](https://www.onlygame.site/)
+- [Source code](https://github.com/SimonSaysGiveMeSmile/SCP3008)
+- [Original SCP-3008 entry](https://scp-wiki.wikidot.com/scp-3008)
