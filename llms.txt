@@ -1,0 +1,21 @@
+# SCP-3008: The Infinite IKEA
+
+> SCP-3008: The Infinite IKEA is a free multiplayer first-person survival horror game that runs in the web browser, based on the SCP Foundation entry SCP-3008, "A Perfectly Normal, Regular Old IKEA." You are trapped in an endless, procedurally generated IKEA: by day its faceless staff wander aimlessly, and at night they turn hostile and hunt you down.
+
+- What it is: an open-source browser game (fan game, CC BY-SA 3.0 source material by Mortos)
+- Features: infinite chunk-based procedural IKEA interior, day/night cycle, faceless SCP-3008-2 staff, survivor settlements with dialogue, weapons and flashlight, minimap, real-time multiplayer with chat, mobile touch controls
+- Stack: React, TypeScript, Three.js (react-three-fiber), Zustand, Vite client; Node.js, Express, Socket.io server
+- Play it: https://scp-3008.vercel.app
+- Source: https://github.com/SimonSaysGiveMeSmile/SCP3008
+
+## Docs
+- [README](https://github.com/SimonSaysGiveMeSmile/SCP3008/blob/main/README.md): overview, features, controls, setup and deployment
+- [Client entry point](https://github.com/SimonSaysGiveMeSmile/SCP3008/blob/main/client/src/App.tsx): the React app that mounts the 3D scene, HUD, minimap and dialogue
+- [World generation](https://github.com/SimonSaysGiveMeSmile/SCP3008/blob/main/client/src/utils/worldGen.ts): chunk-based procedural IKEA layout
+- [Multiplayer server](https://github.com/SimonSaysGiveMeSmile/SCP3008/blob/main/server/src/index.ts): Express + Socket.io server for players, chat and combat
+
+## Optional
+- [Game state store](https://github.com/SimonSaysGiveMeSmile/SCP3008/blob/main/client/src/store/gameStore.ts): Zustand store
+- [Shared types](https://github.com/SimonSaysGiveMeSmile/SCP3008/blob/main/shared/types.ts): types shared by client and server
+- [Website llms.txt](https://github.com/SimonSaysGiveMeSmile/SCP3008/blob/main/client/public/llms.txt): the llms.txt served on the live site
+- [Original SCP-3008 entry](https://scp-wiki.wikidot.com/scp-3008)
